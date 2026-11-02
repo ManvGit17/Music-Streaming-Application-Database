@@ -1,19 +1,22 @@
 # db_utils.py
 """
 Shared DB helper functions used by both Admin and User UIs.
-Edit DB_CONFIG to match your MySQL server credentials.
+Connection settings come from environment variables (see legacy/README.md):
+VAMUSIC_DB_HOST, VAMUSIC_DB_PORT, VAMUSIC_DB_USER, VAMUSIC_DB_PASSWORD, VAMUSIC_DB_NAME.
 """
+
+import os
 
 import mysql.connector
 import bcrypt
-from mysql.connector import errorcode
 from tkinter import messagebox
 
 DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "mysql1234",   # <-- set your MySQL password
-    "database": "vamusic",
+    "host": os.environ.get("VAMUSIC_DB_HOST", "localhost"),
+    "port": int(os.environ.get("VAMUSIC_DB_PORT", "3306")),
+    "user": os.environ.get("VAMUSIC_DB_USER", "root"),
+    "password": os.environ.get("VAMUSIC_DB_PASSWORD", ""),
+    "database": os.environ.get("VAMUSIC_DB_NAME", "vamusic"),
     "raise_on_warnings": True,
     "autocommit": True
 }
