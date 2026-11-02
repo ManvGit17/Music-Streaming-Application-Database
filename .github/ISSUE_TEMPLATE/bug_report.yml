@@ -1,0 +1,42 @@
+name: Bug report
+description: Something doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Requests, SQL or commands that show the problem. A `?lens=1` trace helps a lot.
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Database (schema, functions, migrations)
+        - API
+        - Seed data / CLI
+        - Docker / setup
+        - Legacy v1 (MySQL + Tkinter)
+        - Docs
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      placeholder: e.g. 2.0.0.dev0 or a commit hash
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      render: text
