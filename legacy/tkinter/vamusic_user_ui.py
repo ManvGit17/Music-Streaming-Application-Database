@@ -1,7 +1,7 @@
 # vamusic_user_ui.py
 """
 User UI for VaMusic.
-Requires: db_utils.py, mysql-connector-python, pillow, bcrypt
+Requires: db_utils.py, mysql-connector-python, bcrypt
 Features:
  - Login/Register (bcrypt)
  - Browse/Search tracks

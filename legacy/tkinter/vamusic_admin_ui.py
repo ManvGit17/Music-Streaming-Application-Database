@@ -1,57 +1,55 @@
 # vamusic_admin_ui.py
 """
 Admin UI for VaMusic.
-Requires: db_utils.py, mysql-connector-python, pillow, bcrypt
+Requires: db_utils.py, sql_script.py, mysql-connector-python, bcrypt
 Features:
  - Test DB connection
- - Import SQL script (run your va2music SQL)
+ - Import SQL script (defaults to ../mysql/vamusic_v2.sql)
  - CRUD for Users, Artists, Albums, Tracks, Playlists (basic)
  - Uses db_utils.safe_execute for DB ops
 """
 
 import os
-import re
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from db_utils import safe_execute, get_db_connection, hash_password
+from db_utils import DB_CONFIG, safe_execute, get_db_connection, hash_password
+from sql_script import split_mysql_script
 import mysql.connector
 
-# Path to uploaded SQL file (change if needed)
-SQL_FILE_PATH = "/mnt/data/va2music.sql"
+# Default schema to import: the project's own MySQL script
+SQL_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mysql", "vamusic_v2.sql")
 
 # ---------- Helpers ----------
 def run_sql_file(path):
     """
-    Execute SQL statements in the file using a connection without a default database
-    (so DROP/CREATE can run). This is a simple executor and tolerates some statement errors.
+    Execute every statement in a MySQL script, honouring DELIMITER blocks.
+    Connects without a default database so DROP/CREATE DATABASE can run.
+    Returns the number of statements executed; raises RuntimeError listing any failures.
     """
-    cfg_conn = get_db_connection().get_server_info()  # just to raise early if connection fails
-    # connect again without database to allow CREATE DATABASE if present
-    cfg = get_db_connection().get_server_info  # dummy referencing to avoid linter; actual connect done below
-    conn_cfg = get_db_connection().get_server_info  # not used
-    # Instead create a fresh connection without DB
-    from db_utils import DB_CONFIG
-    cfg2 = DB_CONFIG.copy()
-    cfg2.pop("database", None)
-    conn = mysql.connector.connect(**cfg2)
+    cfg = DB_CONFIG.copy()
+    cfg.pop("database", None)
+    cfg["raise_on_warnings"] = False
+    with open(path, 'r', encoding='utf-8') as f:
+        statements = split_mysql_script(f.read())
+    conn = mysql.connector.connect(**cfg)
     cur = conn.cursor()
+    errors = []
     try:
-        with open(path, 'r', encoding='utf-8') as f:
-            sql_text = f.read()
-        # Remove DELIMITER blocks (basic handling)
-        sql_text = re.sub(r'DELIMITER\s+\S+\s*', '', sql_text, flags=re.IGNORECASE)
-        # Split statements by semicolon (naive but works for most schema files)
-        statements = [s.strip() for s in sql_text.split(';') if s.strip()]
-        for st in statements:
+        for i, st in enumerate(statements, 1):
             try:
                 cur.execute(st)
+                if cur.with_rows:
+                    cur.fetchall()
             except mysql.connector.Error as e:
-                # print and continue; many SQL dumps include DEFINER or replication commands that may error
-                print("SQL execution warning (ignored):", e)
+                errors.append(f"#{i}: {e.msg} -- {st[:60]!r}")
         conn.commit()
     finally:
         cur.close()
         conn.close()
+    if errors:
+        summary = f"{len(errors)} of {len(statements)} statements failed:"
+        raise RuntimeError("\n".join([summary, *errors[:10]]))
+    return len(statements)
 
 # ---------- GUI ----------
 class AdminApp(tk.Tk):
@@ -98,15 +96,15 @@ class AdminApp(tk.Tk):
             messagebox.showerror("DB Error", f"Connection failed: {e}")
 
     def do_import_sql(self):
-        path = filedialog.askopenfilename(initialdir=os.path.dirname(SQL_FILE_PATH) or '.', title="Select SQL file",
+        path = filedialog.askopenfilename(initialdir=os.path.dirname(SQL_FILE_PATH), title="Select SQL file",
                                           filetypes=[("SQL files", "*.sql"), ("All files", "*.*")])
         if not path:
             return
         if not messagebox.askyesno("Import SQL", f"Run SQL script: {path}? This may DROP/CREATE databases. Continue?"):
             return
         try:
-            run_sql_file(path)
-            messagebox.showinfo("Import SQL", "SQL executed (check terminal for non-fatal warnings).")
+            count = run_sql_file(path)
+            messagebox.showinfo("Import SQL", f"Executed {count} statements successfully.")
         except Exception as e:
             messagebox.showerror("Import Error", str(e))
 
@@ -350,7 +348,5 @@ class AdminPlaylistsTab(ttk.Frame):
 
 # ---------- Run ----------
 if __name__ == "__main__":
-    if not os.path.exists(SQL_FILE_PATH):
-        print("SQL file not found at", SQL_FILE_PATH, "- use Import SQL to run a different file.")
     app = AdminApp()
     app.mainloop()
