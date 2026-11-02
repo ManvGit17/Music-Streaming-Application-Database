@@ -138,7 +138,7 @@ class BrowseTab(ttk.Frame):
 
     def load_default(self):
         uid = self.app.user['user_id'] if self.app.user else -1
-        
+
         # Use GetUserRecommendations if user is logged in, otherwise show all tracks
         if self.app.user:
             rows = call_procedure("GetUserRecommendations", (uid, 200)) or []
@@ -158,7 +158,7 @@ class BrowseTab(ttk.Frame):
                 FROM Track t JOIN Album al ON t.album_id=al.album_id JOIN Artist ar ON al.artist_id=ar.artist_id
                 LIMIT 200
             """, (uid,), fetch=True) or []
-        
+
         self._populate(rows)
 
     def _liked_ids(self, uid):
@@ -204,7 +204,7 @@ class BrowseTab(ttk.Frame):
 
     def toggle_like(self):
         if not self.app.user: messagebox.showwarning("Sign in","Please sign in"); return
-        tid = self.get_selected(); 
+        tid = self.get_selected();
         if not tid: return
         exists = safe_execute("SELECT 1 FROM UserLikedTrack WHERE user_id=%s AND track_id=%s", (self.app.user['user_id'], tid), fetch=True)
         if exists:
@@ -217,7 +217,7 @@ class BrowseTab(ttk.Frame):
 
     def add_to_playlist(self):
         if not self.app.user: messagebox.showwarning("Sign in","Please sign in"); return
-        tid = self.get_selected(); 
+        tid = self.get_selected();
         if not tid: return
         pls = safe_execute("SELECT playlist_id, playlist_name FROM Playlist WHERE created_by=%s", (self.app.user['user_id'],), fetch=True) or []
         if not pls:
@@ -318,7 +318,7 @@ class PlaylistsTab(ttk.Frame):
             self.on_select(None)
 
     def remove_selected(self):
-        sel = self.tracks_tv.selection(); 
+        sel = self.tracks_tv.selection();
         if not sel: messagebox.showwarning("Select","Select a track"); return
         tid = int(self.tracks_tv.item(sel[0],'values')[0])
         pid_sel = self.tv.selection()

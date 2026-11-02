@@ -234,7 +234,7 @@ class AdminArtistsTab(ttk.Frame):
         self.bio.delete(0,'end'); self.bio.insert(0, row.get('bio') or '')
 
     def update(self):
-        sel = self.tv.selection(); 
+        sel = self.tv.selection();
         if not sel: messagebox.showwarning("Select","Select artist"); return
         aid = self.tv.item(sel[0],'values')[0]
         safe_execute("UPDATE Artist SET artist_name=%s, bio=%s WHERE artist_id=%s", (self.name.get().strip(), self.bio.get().strip() or None, aid))
@@ -273,7 +273,7 @@ class AdminAlbumsTab(ttk.Frame):
         messagebox.showinfo("Added","Album added"); self.load()
 
     def on_select(self, _):
-        sel = self.tv.selection(); 
+        sel = self.tv.selection();
         if not sel: return
         row = self.tv.item(sel[0],'values')
         self.title_e.delete(0,'end'); self.title_e.insert(0, row[1])
@@ -305,7 +305,7 @@ class AdminTracksTab(ttk.Frame):
         messagebox.showinfo("Added","Track added"); self.load()
 
     def on_select(self, _):
-        sel = self.tv.selection(); 
+        sel = self.tv.selection();
         if not sel: return
         vals = self.tv.item(sel[0],'values')
         self.t_title.delete(0,'end'); self.t_title.insert(0, vals[1])
