@@ -1,7 +1,7 @@
 -- ============================================================
 -- VaMusic merged schema + full sample data (ready to import)
--- Save as: va2music_merged.sql
--- Import: mysql -u root -p < va2music_merged.sql
+-- File: legacy/mysql/vamusic_v2.sql
+-- Import: mysql -u root -p < legacy/mysql/vamusic_v2.sql
 -- ============================================================
 
 DROP DATABASE IF EXISTS vamusic;
@@ -692,13 +692,12 @@ DROP FUNCTION IF EXISTS GetUserTier//
 CREATE FUNCTION GetUserTier(p_user_id BIGINT)
 RETURNS VARCHAR(50)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_minutes INT;
     
-    SELECT COALESCE(total_minutes, 0) INTO v_total_minutes
-    FROM UserStatistics
-    WHERE user_id = p_user_id;
+    -- A listener with no statistics row has listened for 0 minutes.
+    SET v_total_minutes = COALESCE(
+        (SELECT total_minutes FROM UserStatistics WHERE user_id = p_user_id), 0);
     
     RETURN CASE
         WHEN v_total_minutes = 0 THEN 'New Listener'
@@ -714,17 +713,20 @@ DROP FUNCTION IF EXISTS CalculateMonthlyRevenue//
 CREATE FUNCTION CalculateMonthlyRevenue(p_month INT, p_year INT)
 RETURNS DECIMAL(10,2)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_revenue DECIMAL(10,2);
+    DECLARE v_month_start DATE;
+    DECLARE v_month_end DATE;
+    
+    -- A subscription counts if it overlaps any day of the month.
+    SET v_month_start = MAKEDATE(p_year, 1) + INTERVAL (p_month - 1) MONTH;
+    SET v_month_end = LAST_DAY(v_month_start);
     
     SELECT COALESCE(SUM(s.price), 0) INTO v_total_revenue
     FROM UserSubscription us
     INNER JOIN Subscription s ON us.subscription_id = s.subscription_id
-    WHERE MONTH(us.start_date) <= p_month
-    AND YEAR(us.start_date) <= p_year
-    AND (us.end_date IS NULL OR 
-         (MONTH(us.end_date) >= p_month AND YEAR(us.end_date) >= p_year))
+    WHERE us.start_date <= v_month_end
+    AND (us.end_date IS NULL OR us.end_date >= v_month_start)
     AND us.status = 'active';
     
     RETURN v_total_revenue;
@@ -734,7 +736,6 @@ DROP FUNCTION IF EXISTS GetPlaylistDuration//
 CREATE FUNCTION GetPlaylistDuration(p_playlist_id BIGINT)
 RETURNS VARCHAR(20)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_seconds INT;
     
@@ -836,18 +837,18 @@ INSERT INTO Subscription (plan_name, price, duration_days, download_limit, ad_fr
 ('Family', 14.99, 30, 500, TRUE, TRUE, TRUE, 6, 'Share with up to 6 family members'),
 ('Student', 2.99, 30, 50, TRUE, TRUE, TRUE, 1, 'Discounted plan for students');
 
--- Insert Users
+-- Insert Users (demo password for every account: vamusic)
 INSERT INTO User (username, email, password, first_name, last_name, country, date_of_birth) VALUES
-('john_doe', 'john@email.com', '$2b$10$YourHashedPasswordHere', 'John', 'Doe', 'US', '1990-05-15'),
-('jane_smith', 'jane@email.com', '$2b$10$YourHashedPasswordHere', 'Jane', 'Smith', 'GB', '1992-08-22'),
-('mike_wilson', 'mike@email.com', '$2b$10$YourHashedPasswordHere', 'Mike', 'Wilson', 'CA', '1988-03-10'),
-('sarah_jones', 'sarah@email.com', '$2b$10$YourHashedPasswordHere', 'Sarah', 'Jones', 'AU', '1995-11-28'),
-('alex_brown', 'alex@email.com', '$2b$10$YourHashedPasswordHere', 'Alex', 'Brown', 'IN', '1993-07-04'),
-('emma_davis', 'emma@email.com', '$2b$10$YourHashedPasswordHere', 'Emma', 'Davis', 'US', '1991-12-18'),
-('chris_lee', 'chris@email.com', '$2b$10$YourHashedPasswordHere', 'Chris', 'Lee', 'SG', '1994-09-30'),
-('lisa_martin', 'lisa@email.com', '$2b$10$YourHashedPasswordHere', 'Lisa', 'Martin', 'FR', '1989-06-12'),
-('david_garcia', 'david@email.com', '$2b$10$YourHashedPasswordHere', 'David', 'Garcia', 'ES', '1996-02-25'),
-('amy_taylor', 'amy@email.com', '$2b$10$YourHashedPasswordHere', 'Amy', 'Taylor', 'DE', '1990-10-08');
+('john_doe', 'john@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'John', 'Doe', 'US', '1990-05-15'),
+('jane_smith', 'jane@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Jane', 'Smith', 'GB', '1992-08-22'),
+('mike_wilson', 'mike@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Mike', 'Wilson', 'CA', '1988-03-10'),
+('sarah_jones', 'sarah@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Sarah', 'Jones', 'AU', '1995-11-28'),
+('alex_brown', 'alex@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Alex', 'Brown', 'IN', '1993-07-04'),
+('emma_davis', 'emma@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Emma', 'Davis', 'US', '1991-12-18'),
+('chris_lee', 'chris@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Chris', 'Lee', 'SG', '1994-09-30'),
+('lisa_martin', 'lisa@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Lisa', 'Martin', 'FR', '1989-06-12'),
+('david_garcia', 'david@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'David', 'Garcia', 'ES', '1996-02-25'),
+('amy_taylor', 'amy@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Amy', 'Taylor', 'DE', '1990-10-08');
 
 -- Insert User Subscriptions
 INSERT INTO UserSubscription (user_id, subscription_id, start_date, status) VALUES

@@ -130,14 +130,30 @@ def test_user_tier_for_listener_with_history(db):
 
 
 def test_user_tier_for_new_listener(db):
-    """Audit D2: a user with no statistics row is reported as the top tier."""
-    assert db.value("SELECT GetUserTier(10)") == "Music Master"
+    """Audit D2 (fixed): a user with no statistics row used to be reported as the top tier."""
+    assert db.value("SELECT GetUserTier(10)") == "New Listener"
 
 
 def test_monthly_revenue_across_year_boundary(db):
-    """Audit D3: January 2025 reports less revenue than March 2024."""
+    """Audit D3 (fixed): January 2025 used to report less revenue than March 2024."""
+    assert db.value("SELECT CalculateMonthlyRevenue(1, 2024)") == Decimal("34.97")
     assert db.value("SELECT CalculateMonthlyRevenue(3, 2024)") == Decimal("72.92")
-    assert db.value("SELECT CalculateMonthlyRevenue(1, 2025)") == Decimal("34.97")
+    assert db.value("SELECT CalculateMonthlyRevenue(1, 2025)") == Decimal("72.92")
+    assert db.value("SELECT CalculateMonthlyRevenue(12, 2023)") == Decimal("0.00")
+
+
+def test_table_reading_functions_are_not_deterministic(db):
+    """Audit D6 (fixed): functions that read tables must not claim to be DETERMINISTIC."""
+    rows = db.rows(
+        "SELECT ROUTINE_NAME, IS_DETERMINISTIC FROM information_schema.ROUTINES "
+        "WHERE ROUTINE_SCHEMA='vamusic' AND ROUTINE_TYPE='FUNCTION' ORDER BY ROUTINE_NAME"
+    )
+    assert {r["ROUTINE_NAME"]: r["IS_DETERMINISTIC"] for r in rows} == {
+        "CalculateMonthlyRevenue": "NO",
+        "FormatDuration": "YES",
+        "GetPlaylistDuration": "NO",
+        "GetUserTier": "NO",
+    }
 
 
 def test_likes_and_favorites_are_separate_tables(db):
@@ -146,12 +162,13 @@ def test_likes_and_favorites_are_separate_tables(db):
     assert db.value("SELECT COUNT(*) FROM UserFavorites") == 15
 
 
-def test_seed_passwords_are_not_bcrypt_hashes(db):
-    """Audit A2: no seeded user can log in."""
+def test_seed_users_can_log_in(db):
+    """Audit A2 (fixed): seed passwords used to be placeholders, so nobody could log in."""
     import bcrypt
 
-    stored = db.value("SELECT password FROM `User` WHERE username='john_doe'")
-    assert not looks_like_bcrypt(stored)
+    hashes = [r["password"] for r in db.rows("SELECT password FROM `User`")]
+    assert all(looks_like_bcrypt(h) for h in hashes)
+    assert all(bcrypt.checkpw(b"vamusic", h.encode()) for h in hashes)
 
 
 def looks_like_bcrypt(value: str) -> bool:
