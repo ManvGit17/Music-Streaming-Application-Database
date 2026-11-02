@@ -1,0 +1,56 @@
+# One command:  docker compose up
+#
+#   db     PostgreSQL 18 with pgvector
+#   setup  applies migrations and loads the demo dataset (once), then exits
+#   api    the HTTP API on http://localhost:8000  (docs at /docs)
+#
+# Copy .env.example to .env to change passwords or the dataset size.
+
+name: vamusic
+
+x-app: &app
+  build: .
+  image: vamusic-api:local
+  environment:
+    VAMUSIC_DATABASE_URL: postgresql://vamusic:${POSTGRES_PASSWORD:-vamusic-dev}@db:5432/vamusic
+    VAMUSIC_APP_DATABASE_URL: postgresql://vamusic_app:${VAMUSIC_APP_PASSWORD:-vamusic-app-dev}@db:5432/vamusic
+    VAMUSIC_APP_PASSWORD: ${VAMUSIC_APP_PASSWORD:-vamusic-app-dev}
+    VAMUSIC_JWT_SECRET: ${VAMUSIC_JWT_SECRET:-local-development-only-secret-change-me}
+    VAMUSIC_CORS_ORIGINS: '["http://localhost:5173","http://localhost:8000"]'
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_DB: vamusic
+      POSTGRES_USER: vamusic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vamusic-dev}
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vamusic -d vamusic"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  setup:
+    <<: *app
+    command: ["sh", "-c", "vamusic migrate && vamusic seed --if-empty --scale ${VAMUSIC_SCALE:-demo}"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
