@@ -1,0 +1,74 @@
+[project]
+name = "vamusic"
+version = "2.0.0.dev0"
+description = "A database-first music streaming platform on PostgreSQL 18."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "ManvGit17" },
+    { name = "Lohith Anand" },
+]
+dependencies = [
+    "bcrypt>=5.0.0",
+    "fastapi>=0.162.0",
+    "psycopg[binary,pool]>=3.3.6",
+    "pydantic-settings>=2.16.2",
+    "pyjwt>=2.15.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+vamusic = "vamusic.cli:main"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.3",
+    "testcontainers[mysql,postgres]>=4.15.0",
+]
+legacy = [
+    "bcrypt>=5.0.0",
+    "mysql-connector-python>=26.10.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vamusic"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "legacy: tests against the original MySQL schema (needs Docker)",
+    "db: tests against PostgreSQL 18 (needs Docker)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["legacy/tkinter"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S311", "S608"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["vamusic"]
+mypy_path = "src"
+
+[tool.coverage.run]
+source = ["vamusic"]
+branch = true

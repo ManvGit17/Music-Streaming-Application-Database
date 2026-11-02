@@ -1,10 +1,26 @@
-# Ignore Python compiled files
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
 
-# Ignore local database config if it's sensitive
-# (Though db_utils.py has it, we'll track that since it's the core utility)
+# Node
+node_modules/
 
-# Ignore non-code files that might be large or temporary
-*.jpg
-*.jpeg
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
