@@ -21,6 +21,10 @@ GRANT SELECT ON genre, artist, album, track, track_credit, plan, track_stat,
                 artist_dashboard, track_performance, app_user, playlist, playlist_track
     TO vamusic_anon, vamusic_listener;
 
+-- Signed-out visitors may query likes and follows but no policy matches them, so RLS returns
+-- no rows. That lets one query answer "is this liked?" for everyone, with no special case.
+GRANT SELECT ON track_like, artist_follow TO vamusic_anon;
+
 -- A listener's own data.
 GRANT SELECT ON user_account, subscription, payment, user_stat TO vamusic_listener;
 GRANT UPDATE (email, birth_date) ON user_account TO vamusic_listener;
@@ -142,12 +146,13 @@ ALTER FUNCTION ensure_listening_partitions(date, date)
 
 -- Login: the API (connected as vamusic_app, before any SET ROLE) needs the hash to verify.
 CREATE FUNCTION auth_lookup(p_login text)
-    RETURNS TABLE (user_id bigint, public_id uuid, username text, password_hash text,
-                   role user_role, is_active boolean)
+    RETURNS TABLE (user_id bigint, public_id uuid, username text, display_name text,
+                   password_hash text, role user_role, is_active boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path = vamusic, public
 AS $$
-    SELECT u.user_id, u.public_id, u.username, a.password_hash, a.role, a.is_active
+    SELECT u.user_id, u.public_id, u.username, u.display_name, a.password_hash, a.role,
+           a.is_active
     FROM app_user u JOIN user_account a USING (user_id)
     WHERE lower(u.username) = lower(p_login) OR lower(a.email) = lower(p_login);
 $$;
@@ -178,6 +183,12 @@ BEGIN
 END
 $$;
 
+-- Follower totals are public even though who-follows-what is private.
+CREATE FUNCTION playlist_follower_count(p_playlist_id bigint) RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path = vamusic, public
+    RETURN (SELECT count(*) FROM playlist_follow WHERE playlist_id = p_playlist_id);
+
 -- Wrapped compares the listener against everyone, which RLS would otherwise hide; this
 -- wrapper only ever reports on the caller.
 ALTER FUNCTION listener_wrapped(bigint, integer) SET search_path = vamusic, public;
@@ -205,6 +216,7 @@ GRANT EXECUTE ON FUNCTION auth_lookup(text), auth_touch_login(bigint),
 GRANT EXECUTE ON FUNCTION current_user_id(), fold(text), format_duration(bigint),
                           prefix_tsquery(text), search_tracks(text, integer),
                           similar_tracks(bigint, integer), playlist_duration_ms(bigint),
+                          playlist_follower_count(bigint),
                           recommend_tracks(bigint, integer)
     TO vamusic_anon, vamusic_listener, vamusic_admin;
 
@@ -219,3 +231,21 @@ GRANT EXECUTE ON FUNCTION listener_wrapped(bigint, integer), monthly_revenue(dat
     TO vamusic_admin;
 
 -- Trigger functions run as part of the triggering statement and need no EXECUTE grant.
+
+-- Pin search_path on every function that doesn't already have one. Without this a function
+-- resolves table and function names through the *caller's* search_path, which both breaks
+-- callers that don't set it and lets a caller shadow objects (CVE-2018-1058).
+DO $$
+DECLARE
+    f regprocedure;
+BEGIN
+    FOR f IN
+        SELECT p.oid::regprocedure
+        FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'vamusic' AND p.prokind = 'f'
+          AND NOT EXISTS (SELECT 1 FROM unnest(p.proconfig) AS c WHERE c LIKE 'search_path=%')
+    LOOP
+        EXECUTE format('ALTER FUNCTION %s SET search_path = vamusic, public', f);
+    END LOOP;
+END
+$$;
