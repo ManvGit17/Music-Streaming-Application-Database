@@ -21,9 +21,7 @@ def test_schema_objects_are_created(db):
                 "WHERE ROUTINE_SCHEMA='vamusic' AND ROUTINE_TYPE=%s",
                 (kind,),
             )
-        return db.value(
-            f"SELECT COUNT(*) FROM information_schema.{table} WHERE {column}='vamusic'"
-        )
+        return db.value(f"SELECT COUNT(*) FROM information_schema.{table} WHERE {column}='vamusic'")
 
     tables = db.value(
         "SELECT COUNT(*) FROM information_schema.TABLES "
