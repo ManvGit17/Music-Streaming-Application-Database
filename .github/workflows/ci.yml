@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_PYTHON: "3.13"
+
+jobs:
+  lint:
+    name: Lint and type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff format --check src tests
+      - run: uv run ruff check src tests
+      - run: uv run mypy
+
+  test:
+    name: Tests (PostgreSQL 18)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Run tests against a real PostgreSQL 18 + pgvector container
+        run: uv run pytest -m "not legacy" --cov --cov-report=term --cov-report=xml
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage.xml
+
+  legacy:
+    name: Legacy v1 (MySQL 8.4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest -m legacy
+
+  stack:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start the stack
+        run: docker compose up -d --build --wait --wait-timeout 300
+        env:
+          VAMUSIC_SCALE: tiny
+      - name: Check the API end to end
+        run: |
+          curl -fsS http://localhost:8000/api/health
+          curl -fsS "http://localhost:8000/api/search?q=midnite%20tran&limit=1" | grep -q "Midnight Train"
+          token=$(curl -fsS -X POST http://localhost:8000/api/auth/login \
+            -H 'content-type: application/json' \
+            -d '{"login":"john_doe","password":"vamusic"}' | jq -r .token)
+          curl -fsS http://localhost:8000/api/me/recommendations -H "Authorization: Bearer $token" \
+            | jq -e 'length > 0'
+      - name: Logs
+        if: failure()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down -v
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pip-audit --skip-editable
