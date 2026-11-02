@@ -79,9 +79,11 @@ an exact (non-indexed) nearest-neighbour scan, which is fine at demo scale.
 ### F4. Security by design — **M**, risk: low
 
 - Separate roles: `vamusic_api` (no table ownership), `vamusic_listener`, `vamusic_admin`.
-- **Row-level security** with `FORCE ROW LEVEL SECURITY` on playlists, likes, follows and
-  history, using `USING` and `WITH CHECK` policies keyed on a per-request setting, reset on every
-  pooled connection checkout.
+- **Row-level security** on playlists, likes, follows and history, using `USING` and
+  `WITH CHECK` policies keyed on a transaction-local setting, so it resets before the pooled
+  connection is reused. _(Decided during PR 1: request roles never own tables, so RLS always
+  applies to them without `FORCE`; that lets narrowly scoped `SECURITY DEFINER` functions, owned
+  by the schema owner, handle login and global counters. See docs/database.md.)_
 - A generic audit trigger that writes JSONB before/after diffs for admin changes.
 - Admin login (A5); no credentials in the repository (A4); config through environment variables.
 - Tests that try to read and write another listener's data and must fail.
@@ -111,13 +113,13 @@ Each PR is tested, CI-green and merged before the next one starts.
 
 ## What this supports on a résumé
 
-These bullets are only true once the work ships and the numbers are measured; the real figures
-replace the placeholders in PR 1 and PR 2.
+Numbers come from `scripts/bench_counters.py` and the test suite (PR 1).
 
 - Designed a PostgreSQL 18 schema for a music streaming platform (19+ tables, monthly-partitioned
   event store with BRIN indexes) and load-tested it with ~1M generated listening events.
-- Replaced trigger-based counters with incremental rollups and materialized views, cutting
-  per-listen write cost by _N_× (measured).
+- Replaced per-row trigger rescans with statement-level triggers over transition tables and
+  materialized-view rollups: bulk event ingest 73× faster and single-insert median latency 2.2×
+  lower at 1M events (measured).
 - Built hybrid search (full-text + trigram + pgvector HNSW, fused with Reciprocal Rank Fusion)
   and vector-similarity recommendations entirely in SQL.
 - Enforced per-user data isolation with row-level security and least-privilege roles, verified
