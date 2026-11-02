@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from conftest import SCHEMA
 from sql_script import split_mysql_script
+
+from tests.legacy.conftest import SCHEMA
 
 
 def test_plain_statements():
@@ -40,7 +41,10 @@ def test_escaped_and_doubled_quotes():
 
 def test_project_schema_splits_into_whole_routines():
     statements = split_mysql_script(SCHEMA.read_text(encoding="utf-8"))
-    routines = [s for s in statements if s.startswith(("CREATE TRIGGER", "CREATE PROCEDURE",
-                                                       "CREATE FUNCTION"))]
+    routines = [
+        s
+        for s in statements
+        if s.startswith(("CREATE TRIGGER", "CREATE PROCEDURE", "CREATE FUNCTION"))
+    ]
     assert len(routines) == 17
     assert all(s.rstrip().endswith("END") for s in routines)

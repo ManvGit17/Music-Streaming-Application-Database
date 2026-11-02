@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from conftest import SCHEMA, Db
+
+from tests.legacy.conftest import SCHEMA, Db
 
 pytest.importorskip("tkinter")
 
@@ -24,12 +25,18 @@ def test_import_loads_every_routine(admin, mysql_server):
     assert admin.run_sql_file(str(SCHEMA)) > 100
     db = Db(mysql_server)
     try:
-        assert db.value(
-            "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='vamusic'"
-        ) == 9
-        assert db.value(
-            "SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA='vamusic'"
-        ) == 8
+        assert (
+            db.value(
+                "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='vamusic'"
+            )
+            == 9
+        )
+        assert (
+            db.value(
+                "SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA='vamusic'"
+            )
+            == 8
+        )
     finally:
         db.close()
 

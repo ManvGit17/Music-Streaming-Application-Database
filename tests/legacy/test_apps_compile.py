@@ -5,7 +5,8 @@ from __future__ import annotations
 import py_compile
 
 import pytest
-from conftest import LEGACY_APP
+
+from tests.legacy.conftest import LEGACY_APP
 
 
 @pytest.mark.parametrize("path", sorted(LEGACY_APP.glob("*.py")), ids=lambda p: p.name)
