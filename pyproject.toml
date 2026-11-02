@@ -13,6 +13,7 @@ dependencies = [
     "fastapi>=0.162.0",
     "psycopg[binary,pool]>=3.3.6",
     "pydantic-settings>=2.16.2",
+    "pydantic[email]>=2.14.2",
     "pyjwt>=2.15.1",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -22,7 +23,7 @@ vamusic = "vamusic.cli:main"
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
+    "httpx2>=2.16.0",
     "mypy>=2.4.1",
     "pip-audit>=2.10.1",
     "pre-commit>=4.7.0",
@@ -46,6 +47,10 @@ packages = ["src/vamusic"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+filterwarnings = [
+    # mysql-connector deprecates stored_results() before shipping its replacement property.
+    "ignore:Call to deprecated function stored_results:DeprecationWarning",
+]
 markers = [
     "legacy: tests against the original MySQL schema (needs Docker)",
     "db: tests against PostgreSQL 18 (needs Docker)",
@@ -61,7 +66,10 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106", "S311", "S608"]
+"tests/**" = ["S105", "S106", "S107", "S311", "S608"]
+# Route SQL is composed only from module-level constant fragments (TRACK_FIELDS, TRACK_JOINS);
+# every value that comes from a request is passed as a bind parameter.
+"src/vamusic/api/routes/*.py" = ["S608"]
 # Deterministic, seeded test data; never used for anything secret.
 "src/vamusic/seed/generator.py" = ["S311"]
 
@@ -74,3 +82,6 @@ mypy_path = "src"
 [tool.coverage.run]
 source = ["vamusic"]
 branch = true
+
+[tool.uv]
+default-groups = ["dev", "legacy"]
