@@ -61,6 +61,7 @@ export default function SearchPage() {
   const [genre, setGenre] = useState<number | null>(null);
   const results = useSearch(debounced);
   const byGenre = useTrending(genre, 30);
+  const suggestions = useTrending(null, 3);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -124,9 +125,16 @@ export default function SearchPage() {
               />
             </Section>
           ) : (
-            <EmptyState title="Nothing matched" icon={<SearchIcon className="size-8" />}>
-              Not even a fuzzy match for “{debounced}”. Try fewer words, or browse a genre below.
-            </EmptyState>
+            <>
+              <EmptyState title="Nothing matched" icon={<SearchIcon className="size-8" />}>
+                Not even a fuzzy match for “{debounced}”. Try fewer words, or browse a genre below.
+              </EmptyState>
+              {suggestions.data?.length ? (
+                <Section title="Popular right now" eyebrow="While you’re here">
+                  <TrackList tracks={suggestions.data} />
+                </Section>
+              ) : null}
+            </>
           )
         ) : (
           <TrackListSkeleton />
