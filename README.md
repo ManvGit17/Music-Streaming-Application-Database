@@ -10,13 +10,13 @@
 A music streaming app built database-first on PostgreSQL 18.<br>
 Open any screen and see the exact SQL, plans and triggers behind it.
 
-[![CI](https://github.com/ManvGit17/Music-Streaming-Application-Database/actions/workflows/ci.yml/badge.svg)](https://github.com/ManvGit17/Music-Streaming-Application-Database/actions/workflows/ci.yml)
+[![CI](https://github.com/ManvGit17/tuple-beat/actions/workflows/ci.yml/badge.svg)](https://github.com/ManvGit17/tuple-beat/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f0a088)](LICENSE)
-[![Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FManvGit17%2FMusic-Streaming-Application-Database%2Fmaster%2Fpyproject.toml&query=%24.project.version&label=version&color=e0567c)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FManvGit17%2Ftuple-beat%2Fmaster%2Fpyproject.toml&query=%24.project.version&label=version&color=e0567c)](CHANGELOG.md)
 ![PostgreSQL 18](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql&logoColor=white)
 
-**[Live demo](https://manvgit17.github.io/Music-Streaming-Application-Database/)** ·
-**[Documentation](https://manvgit17.github.io/Music-Streaming-Application-Database/docs/)** ·
+**[Live demo](https://manvgit17.github.io/tuple-beat/)** ·
+**[Documentation](https://manvgit17.github.io/tuple-beat/docs/)** ·
 [Quick start](#quick-start) ·
 [Database design](docs/database.md)
 
@@ -80,14 +80,14 @@ The reasoning behind each choice is in [docs/database.md](docs/database.md).
 
 ## Quick start
 
-**In your browser, 0 seconds:** open the [live demo](https://manvgit17.github.io/Music-Streaming-Application-Database/)
+**In your browser, 0 seconds:** open the [live demo](https://manvgit17.github.io/tuple-beat/)
 and choose **Explore as a listener**. The first visit builds the database locally, which takes a
 few seconds; after that it loads from IndexedDB.
 
 **With Docker, one command:**
 
 ```bash
-git clone https://github.com/ManvGit17/Music-Streaming-Application-Database.git vamusic
+git clone https://github.com/ManvGit17/tuple-beat.git vamusic
 cd vamusic
 docker compose up
 ```

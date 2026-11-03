@@ -14,8 +14,8 @@ sidebar:
 ## Set up
 
 ```bash
-git clone https://github.com/ManvGit17/Music-Streaming-Application-Database.git
-cd Music-Streaming-Application-Database
+git clone https://github.com/ManvGit17/tuple-beat.git
+cd tuple-beat
 uv sync
 uv run pre-commit install
 ```

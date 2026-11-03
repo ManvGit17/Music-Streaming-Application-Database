@@ -23,8 +23,8 @@ None of this showed up in a demo. All of it would have shown up in a week of rea
 So I rebuilt it. Version 2 is still a database project at heart, but it now runs on
 PostgreSQL 18, has a web app, and ships with a demo that runs the real database in your browser.
 
-**Live demo:** https://manvgit17.github.io/Music-Streaming-Application-Database/
-**Code:** https://github.com/ManvGit17/Music-Streaming-Application-Database
+**Live demo:** https://manvgit17.github.io/tuple-beat/
+**Code:** https://github.com/ManvGit17/tuple-beat
 
 ## Making the database visible
 

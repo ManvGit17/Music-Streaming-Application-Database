@@ -12,7 +12,7 @@ I rebuilt my university database project, a music streaming app, on PostgreSQL 1
 
 The demo runs the real database in your browser, and every screen shows you the SQL behind it.
 
-https://manvgit17.github.io/Music-Streaming-Application-Database/
+https://manvgit17.github.io/tuple-beat/
 
 [demo animation]
 
@@ -50,7 +50,7 @@ No server for the demo: PGlite (Postgres in WebAssembly) applies the same migrat
 the same SQL files as the API.
 
 Code is MIT. Good first issues are listed if you'd like to help.
-https://github.com/ManvGit17/Music-Streaming-Application-Database
+https://github.com/ManvGit17/tuple-beat
 
 ---
 
@@ -76,8 +76,8 @@ Version 2 runs on PostgreSQL 18 and puts the work in the database:
 The demo needs no install. It runs PostgreSQL in the browser via WebAssembly, and a "SQL Lens"
 shows the queries, plans and triggers behind every screen.
 
-Demo: https://manvgit17.github.io/Music-Streaming-Application-Database/
-Code: https://github.com/ManvGit17/Music-Streaming-Application-Database
+Demo: https://manvgit17.github.io/tuple-beat/
+Code: https://github.com/ManvGit17/tuple-beat
 
 The original version was built with Lohith Anand. Feedback welcome, especially on the schema.
 

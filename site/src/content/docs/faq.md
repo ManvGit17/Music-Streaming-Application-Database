@@ -147,7 +147,7 @@ about reusing code, and credit the project.
 
 ### How do I report a bug or a security problem?
 
-Bugs: open an issue on [GitHub](https://github.com/ManvGit17/Music-Streaming-Application-Database/issues).
+Bugs: open an issue on [GitHub](https://github.com/ManvGit17/tuple-beat/issues).
 Security problems: follow the
-[security policy](https://github.com/ManvGit17/Music-Streaming-Application-Database/blob/master/SECURITY.md)
+[security policy](https://github.com/ManvGit17/tuple-beat/blob/master/SECURITY.md)
 instead of opening a public issue.
