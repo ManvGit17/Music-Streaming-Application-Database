@@ -81,6 +81,39 @@ jobs:
         if: always()
         run: docker compose down -v
 
+  web:
+    name: Web app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Export the demo dataset
+        working-directory: .
+        run: uv sync --locked && uv run vamusic export --scale web --out web/public/seed
+      - run: npm ci
+      - run: npx biome ci .
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: End-to-end and accessibility tests (PostgreSQL in the browser)
+        run: npx playwright test
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/test-results
+
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -91,3 +124,9 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - run: uv run pip-audit --skip-editable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: npm audit (runtime dependencies)
+        working-directory: web
+        run: npm audit --omit=dev --audit-level=high
