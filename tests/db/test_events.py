@@ -86,6 +86,11 @@ def test_counters_match_a_full_recount(db):
     assert mismatches == 0
 
 
+def test_seeding_summarizes_the_brin_index(db):
+    """Unsummarized BRIN ranges must all be read, so a fresh seed would get no use from it."""
+    assert db.value("SELECT summarize_listening_events()") == 0
+
+
 def test_ensure_partitions_is_idempotent(db):
     assert db.value("SELECT ensure_listening_partitions('2026-01-01', '2026-06-01')") == 0
     assert db.value("SELECT ensure_listening_partitions('2028-01-01', '2028-03-01')") == 2
