@@ -188,6 +188,8 @@ async function boot(id: number, base: string): Promise<BootInfo> {
       "SELECT vamusic.ensure_listening_partitions(date_trunc('month', now())::date, (now() + interval '1 year')::date)",
     );
     await db.query("SELECT * FROM vamusic.refresh_analytics()");
+    // The BRIN index predates the COPY, so the loaded block ranges have no summaries yet.
+    await db.query("SELECT vamusic.summarize_listening_events()");
     progress({ step: "finish", label: "Collecting planner statistics", fraction: 0.95 });
     await db.exec("ANALYZE");
     await db.exec(
