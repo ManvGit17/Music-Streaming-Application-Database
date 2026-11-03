@@ -8,7 +8,7 @@ post, and screenshots to the others where noted._
 ## X thread
 
 **1/**
-We rebuilt our university database project, a music streaming app, on PostgreSQL 18.
+I rebuilt my university database project, a music streaming app, on PostgreSQL 18.
 
 The demo runs the real database in your browser, and every screen shows you the SQL behind it.
 
@@ -34,7 +34,7 @@ history: 13.7 s → 0.19 s. Measured, not guessed.
 **4/**
 Recommendations use pgvector with an HNSW index.
 
-Our first version scored every neighbour ~99%. All-positive vectors all point the same way, so
+My first version scored every neighbour ~99%. All-positive vectors all point the same way, so
 cosine can't separate them. Measuring from the midpoint fixed it.
 
 [now-playing.webp]
@@ -56,10 +56,10 @@ https://github.com/ManvGit17/Music-Streaming-Application-Database
 
 ## LinkedIn post
 
-We rebuilt our DBMS course project from last year, and learned more from the rebuild than from
+I rebuilt my DBMS course project from last year, and learned more from the rebuild than from
 the original.
 
-VaMusic started as a MySQL schema with two desktop apps. When we audited it properly, the
+VaMusic started as a MySQL schema with two desktop apps. When I audited it properly, the
 listener app didn't start, no sample user could log in, likes lived in two tables that
 disagreed, and the trending page went blank a week after loading the data. None of it showed up
 in a demo.
@@ -79,6 +79,6 @@ shows the queries, plans and triggers behind every screen.
 Demo: https://manvgit17.github.io/Music-Streaming-Application-Database/
 Code: https://github.com/ManvGit17/Music-Streaming-Application-Database
 
-Built with Lohith Anand. Feedback welcome, especially on the schema.
+The original version was built with Lohith Anand. Feedback welcome, especially on the schema.
 
 #PostgreSQL #Databases #WebAssembly #OpenSource
