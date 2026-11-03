@@ -163,6 +163,7 @@ and [CONTRIBUTING.md](CONTRIBUTING.md) explains the setup, tests and commit styl
 the [code of conduct](CODE_OF_CONDUCT.md), and report security problems as described in
 [SECURITY.md](SECURITY.md).
 
-## Authors
+## Author
 
-ManvGit17 and Lohith Anand. The original project was a database mini project (2025). Released under the [MIT License](LICENSE).
+Version 2 is by ManvGit17. The original 2025 version was a DBMS mini project built by ManvGit17 and Lohith Anand. Released under the
+[MIT License](LICENSE).
