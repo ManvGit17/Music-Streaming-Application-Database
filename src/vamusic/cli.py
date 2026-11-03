@@ -60,6 +60,21 @@ def cmd_seed(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from vamusic.seed.generator import generate
+    from vamusic.seed.loader import export
+
+    out = Path(args.out)
+    manifest = export(generate(args.scale, args.seed), out)
+    tables = manifest["tables"]
+    assert isinstance(tables, list)
+    size = sum(f.stat().st_size for f in out.glob("*.tsv.gz"))
+    print(f"wrote {len(tables)} tables to {out} ({size / 1e6:.1f} MB gzipped)")
+    return 0
+
+
 def cmd_refresh(_args: argparse.Namespace) -> int:
     with _connect() as conn:
         for view, ms in conn.execute("SELECT * FROM vamusic.refresh_analytics()").fetchall():
@@ -94,6 +109,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=17)
     p.add_argument("--if-empty", action="store_true", help="succeed quietly if already seeded")
     p.set_defaults(func=cmd_seed)
+
+    p = sub.add_parser("export", help="write the dataset as gzipped COPY files for the web demo")
+    p.add_argument("--scale", choices=["tiny", "demo", "full"], default="demo")
+    p.add_argument("--seed", type=int, default=17)
+    p.add_argument("--out", default="web/public/seed")
+    p.set_defaults(func=cmd_export)
 
     p = sub.add_parser("refresh", help="refresh the analytics materialized views")
     p.set_defaults(func=cmd_refresh)
