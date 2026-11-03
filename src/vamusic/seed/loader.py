@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import gzip
+import json
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from datetime import date, datetime
+from pathlib import Path
 
 import bcrypt
 import psycopg
@@ -128,6 +132,47 @@ def _copy(conn: psycopg.Connection, table: str, columns: Sequence[str], rows: It
             copy.write_row(row)
             n += 1
     return n
+
+
+def _text_value(value: object) -> str:
+    """One field in PostgreSQL's COPY text format."""
+    if value is None:
+        return r"\N"
+    if isinstance(value, bool):
+        return "t" if value else "f"
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    text = str(value)
+    return text.replace("\\", "\\\\").replace("\t", "\\t").replace("\n", "\\n").replace("\r", "\\r")
+
+
+def export(ds: Dataset, out_dir: Path) -> dict[str, object]:
+    """Write ``ds`` as gzipped COPY text files plus a manifest, for loading into PGlite.
+
+    The web demo replays these with ``COPY ... FROM '/dev/blob'`` in the same table order the
+    loader uses, so the browser holds exactly the dataset the Docker setup does.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # A fixed salt keeps the export reproducible; the demo password is public anyway.
+    password_hash = bcrypt.hashpw(DEMO_PASSWORD.encode(), b"$2b$10$vamusicdemosaltvamusie").decode()
+    accounts = [(*row, password_hash) for row in ds.accounts]
+    tables = []
+    for table, columns, attr in _TABLES:
+        rows = accounts if attr == "accounts" else getattr(ds, attr)
+        path = out_dir / f"{table}.tsv.gz"
+        text = "".join("\t".join(_text_value(v) for v in row) + "\n" for row in rows)
+        # mtime=0 makes the archive byte-for-byte reproducible.
+        path.write_bytes(gzip.compress(text.encode("utf-8"), mtime=0))
+        tables.append(
+            {"table": table, "columns": list(columns), "file": path.name, "rows": len(rows)}
+        )
+    manifest: dict[str, object] = {
+        "tables": tables,
+        "identity": [{"table": t, "column": c} for t, c in _IDENTITY],
+        "audited": list(_AUDITED),
+    }
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
 
 
 def load(conn: psycopg.Connection, ds: Dataset) -> LoadReport:

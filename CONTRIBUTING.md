@@ -23,6 +23,21 @@ uv run vamusic seed --scale tiny
 uv run vamusic serve --reload
 ```
 
+## The web app
+
+```bash
+cd web
+npm install
+npm run seed        # export the demo dataset into web/public/seed
+npm run dev         # database runs in the browser
+npm run lint && npm run typecheck && npm test
+npm run build && npx playwright test   # end-to-end and accessibility tests
+```
+
+SQL lives in `db/queries/*.sql`, never inline in the API or the web app. Both load the same
+files, so add a named query there and call it by name from both sides; `tests/test_queries.py`
+fails if the API references a query that doesn't exist or a query goes unused.
+
 ## Tests
 
 The tests start their own PostgreSQL 18 and MySQL 8.4 containers, so Docker must be running.

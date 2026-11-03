@@ -13,6 +13,8 @@ chosen. The SQL itself is in [`db/migrations/`](../db/migrations/), one numbered
 | `0006_search_and_recommendations` | hybrid search, vector similarity, recommendations |
 | `0007_security` | privileges, row-level security, `SECURITY DEFINER` functions |
 | `0008_audit` | JSONB change log |
+| `0009_cards` | `track_card` and `playlist_card`, display-ready views shared by the API and the web app |
+| `0010_centred_similarity` | centred cosine similarity and an HNSW expression index |
 
 ## Entity relationships
 
@@ -148,8 +150,13 @@ Each track carries an 8-dimension `vector` of audio features (energy, valence, d
 acousticness, instrumentalness, speechiness, liveness, tempo). The generator scatters tracks
 around per-genre centroids, so nearby vectors sound alike.
 
-- `similar_tracks()` is a nearest-neighbour query on an **HNSW** index (`vector_cosine_ops`); a
-  test checks that the plan uses it.
+- Similarity is **centred cosine**: vectors are measured from the neutral point 0.5
+  (`centred()`), because vectors with only non-negative coordinates can never point in opposite
+  directions, which squeezed every neighbour's score towards 1. Migration 0010 indexes
+  `centred(features)::vector(8)`; the cast is needed because pgvector requires a known
+  dimension and PostgreSQL drops type modifiers from function results.
+- `similar_tracks()` is a nearest-neighbour query on that **HNSW** expression index
+  (`vector_cosine_ops`); a test checks that the plan uses it.
 - `recommend_tracks()` averages the listener's liked and recently played tracks into a taste
   vector, then pulls nearest neighbours, skipping tracks they already like or played in the last
   30 days. Because that filter can discard many candidates, the function sets pgvector 0.8's
