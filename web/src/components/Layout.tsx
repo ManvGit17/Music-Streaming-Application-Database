@@ -317,9 +317,28 @@ function TopBar({ onSearch }: { onSearch: () => void }) {
           ) : null}
         </button>
         <ThemeMenu />
+        <RoleBadge />
         <AccountMenu />
       </div>
     </header>
+  );
+}
+
+/** The database role requests run as, so switching account visibly switches role. */
+function RoleBadge() {
+  const session = useSession();
+  const role = session ? (session.role === "admin" ? "admin" : "listener") : "anon";
+  return (
+    <span
+      title={`Requests run as the vamusic_${role} database role`}
+      className={cn(
+        "hidden rounded-full border px-2 py-0.5 font-mono text-[0.6875rem] sm:inline",
+        role === "admin" ? "border-accent text-accent" : "border-line text-muted",
+      )}
+    >
+      <span className="sr-only">Database role: </span>
+      {role}
+    </span>
   );
 }
 
