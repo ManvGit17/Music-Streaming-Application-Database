@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from vamusic.seed import classic
-from vamusic.seed.generator import ANCHOR, HISTORY_DAYS, SCALES, generate
+from vamusic.seed.generator import ANCHOR, HISTORY_DAYS, SCALES, _unique, generate
 
 
 def test_same_seed_same_data():
@@ -20,6 +20,13 @@ def test_v1_catalog_and_accounts_are_kept():
     assert [a[1] for a in ds.artists[: len(classic.ARTISTS)]] == [a[0] for a in classic.ARTISTS]
     assert [t[2] for t in ds.tracks[: len(classic.TRACKS)]] == [t[0] for t in classic.TRACKS]
     assert ds.users[0][1] == "john_doe"
+
+
+def test_unique_names_are_numbered_once_the_word_lists_run_out():
+    used = {"Echo"}
+    assert _unique(used, lambda: "Echo") == "Echo, Part 2"
+    assert _unique(used, lambda: "Echo") == "Echo, Part 3"
+    assert _unique(used, lambda: "Dawn") == "Dawn"
 
 
 def test_scale_is_respected():

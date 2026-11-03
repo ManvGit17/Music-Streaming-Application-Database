@@ -333,12 +333,19 @@ def _pick_weighted(rng: random.Random, options: tuple[tuple[str, float], ...]) -
 
 
 def _unique(used: set[str], make: Callable[[], str]) -> str:
+    candidate = ""
     for _ in range(1000):
         candidate = str(make())
         if candidate not in used:
             used.add(candidate)
             return candidate
-    raise RuntimeError("ran out of unique names")
+    # The word lists run out at the largest scale: number the repeat instead. This only happens
+    # after every draw above failed, so smaller datasets come out exactly as before.
+    part = 2
+    while f"{candidate}, Part {part}" in used:
+        part += 1
+    used.add(f"{candidate}, Part {part}")
+    return f"{candidate}, Part {part}"
 
 
 def generate(scale: Scale = "demo", seed: int = 17) -> Dataset:
