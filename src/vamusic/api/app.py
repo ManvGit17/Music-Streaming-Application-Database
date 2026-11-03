@@ -51,9 +51,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=__version__,
         description=(
             "A database-first music streaming API on PostgreSQL 18. Add `?lens=1` to any "
-            "request to see the SQL it ran, or `?lens=plan` for execution plans too."
+            "request to see the SQL it ran, or `?lens=plan` for execution plans too.\n\n"
+            "Sign in with `POST /api/auth/login` and send the token it returns as "
+            "`Authorization: Bearer <token>`. Every demo account's password is `vamusic`."
         ),
         lifespan=lifespan,
+        # Operation ids are the route functions' names, which keeps reference URLs readable.
+        generate_unique_id_function=lambda route: route.name,
     )
     app.state.settings = settings
     app.add_middleware(

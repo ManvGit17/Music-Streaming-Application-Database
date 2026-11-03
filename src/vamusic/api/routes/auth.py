@@ -39,6 +39,7 @@ def register(
     db: AppSession,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Row:
+    """Create a listener account through a `SECURITY DEFINER` function; returns a session token."""
     row = db.q1(
         "auth.register",
         username=body.username,
@@ -57,6 +58,7 @@ def login(
     db: AppSession,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Row:
+    """Look up the account through a `SECURITY DEFINER` function and check its bcrypt hash."""
     row = db.q1("auth.login_lookup", login=body.login)
     ok = verify_password(body.password, row["password_hash"] if row else None)
     if not row or not ok or not row["is_active"]:
@@ -68,6 +70,7 @@ def login(
 
 @router.get("/me", response_model=schemas.Me)
 def me(db: DbSession, _user: CurrentUser) -> Row:
+    """The signed-in listener's profile, tier, plan and listening totals."""
     row = db.q1("auth.me")
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "account not found")
@@ -76,6 +79,7 @@ def me(db: DbSession, _user: CurrentUser) -> Row:
 
 @router.patch("/me", response_model=schemas.Me)
 def update_me(body: schemas.ProfileIn, db: DbSession, _user: CurrentUser) -> Row:
+    """Change the signed-in listener's display name or country."""
     changes = body.model_dump(exclude_unset=True)
     if changes:
         db.q(
