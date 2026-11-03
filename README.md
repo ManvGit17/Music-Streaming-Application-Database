@@ -164,7 +164,8 @@ and [CONTRIBUTING.md](CONTRIBUTING.md) explains the setup, tests and commit styl
 the [code of conduct](CODE_OF_CONDUCT.md), and report security problems as described in
 [SECURITY.md](SECURITY.md).
 
-## Authors
+## Author
 
-Manit V Urs and Lohith Anand. The original project was a DBMS mini project at PES University
-(UE23CS351A, 2025). Released under the [MIT License](LICENSE).
+Version 2 is by Manit V Urs. The original 2025 version was a DBMS mini project at PES
+University (UE23CS351A) built by Manit V Urs and Lohith Anand. Released under the
+[MIT License](LICENSE).
