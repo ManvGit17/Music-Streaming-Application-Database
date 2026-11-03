@@ -58,7 +58,7 @@ def login(
     db: AppSession,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Row:
-    """Check a username and password with bcrypt inside the database and return a session token."""
+    """Look up the account through a `SECURITY DEFINER` function and check its bcrypt hash."""
     row = db.q1("auth.login_lookup", login=body.login)
     ok = verify_password(body.password, row["password_hash"] if row else None)
     if not row or not ok or not row["is_active"]:
