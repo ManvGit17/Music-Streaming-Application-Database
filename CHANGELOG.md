@@ -40,7 +40,7 @@ documentation. The original MySQL and Tkinter version still runs from `legacy/`.
   a generated dataset, published to GitHub Pages.
 - **Data generator**: deterministic datasets from 6,000 to 1,000,000 listening events.
 - **CLI**: `vamusic migrate`, `seed`, `export`, `refresh`, `serve` and `openapi`.
-- **Tests**: 165 Python tests against PostgreSQL 18 and MySQL 8.4 containers, including
+- **Tests**: 168 Python tests against PostgreSQL 18 and MySQL 8.4 containers, including
   row-level security attacks, plan checks and characterization tests for the original project;
   Playwright end-to-end and axe-core accessibility tests.
 - **Tooling**: uv, Ruff, mypy (strict), Biome, pre-commit, Docker Compose, GitHub Actions CI,
