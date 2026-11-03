@@ -16,6 +16,7 @@ chosen. The SQL itself is in [`db/migrations/`](../db/migrations/), one numbered
 | `0009_cards` | `track_card` and `playlist_card`, display-ready views shared by the API and the web app |
 | `0010_centred_similarity` | centred cosine similarity and an HNSW expression index |
 | `0011_function_comments` | a `COMMENT ON` for every function, enforced by a test |
+| `0012_brin_summaries` | `summarize_listening_events()`, run after bulk loads so the BRIN index is usable |
 
 ## Entity relationships
 
@@ -80,8 +81,23 @@ security. Queries that only need a display name never touch a password hash.
 
 - queries with a time range touch only the relevant months (partition pruning, which is tested);
 - old months can be detached or archived without a large `DELETE`;
-- a **BRIN** index on `played_at` costs a few pages instead of a full B-tree, because rows arrive
-  roughly in time order.
+- a **BRIN** index on `played_at` stays tiny (1.2 MB against 22 MB for a B-tree at a million
+  rows), because rows arrive roughly in time order and it stores only a min/max per block range.
+
+**Measured** with [`scripts/bench_brin.py`](../scripts/bench_brin.py) at a million plays, for a
+range query ending at the busiest day (other indexes that end in `played_at` hidden):
+
+| Range | Rows | BRIN, as loaded | BRIN, summarized | B-tree | No index |
+| :-- | --: | --: | --: | --: | --: |
+| 1 hour | 500 | 23.24 ms | **1.86 ms** | 2.55 ms | 16.70 ms |
+| 1 day | 10,429 | 39.78 ms | 4.12 ms | **2.77 ms** | 22.90 ms |
+| 7 days | 59,664 | 41.40 ms | 15.79 ms | **10.05 ms** | 25.64 ms |
+
+A BRIN index created before a bulk load has no summaries for the loaded ranges, and a scan must
+read every unsummarized range, which made it slower than no index. Migration 0012 adds
+`summarize_listening_events()`, run by the seed loader and the browser demo after loading;
+autovacuum covers live traffic. Summarized, BRIN is 19 times smaller than the B-tree, faster for
+an hour of data and within about 1.5 times for a day or a week.
 
 The partition key has to be part of the primary key, hence `PRIMARY KEY (event_id, played_at)`.
 `ensure_listening_partitions()` creates months ahead of time, and `vamusic migrate` keeps a year of
