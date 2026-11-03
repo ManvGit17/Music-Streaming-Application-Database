@@ -8,8 +8,8 @@ changes to Python, and they get the same review.
 You need [uv](https://docs.astral.sh/uv/), Docker, and Git.
 
 ```bash
-git clone https://github.com/ManvGit17/Music-Streaming-Application-Database.git
-cd Music-Streaming-Application-Database
+git clone https://github.com/ManvGit17/tuple-beat.git
+cd tuple-beat
 uv sync
 uv run pre-commit install
 ```

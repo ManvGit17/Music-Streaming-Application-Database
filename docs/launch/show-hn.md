@@ -9,7 +9,7 @@ try, and the author should be around to answer comments._
 
 > Show HN: A music streaming app built in PostgreSQL 18 that shows its SQL
 
-**URL:** https://manvgit17.github.io/Music-Streaming-Application-Database/
+**URL:** https://manvgit17.github.io/tuple-beat/
 
 **Text:**
 
@@ -31,4 +31,4 @@ try, and the author should be around to answer comments._
 > word_similarity matches fragments in ways that surprise you.
 >
 > It's a student project, not a production service, and I'd like to hear what I got wrong.
-> Code (MIT): https://github.com/ManvGit17/Music-Streaming-Application-Database
+> Code (MIT): https://github.com/ManvGit17/tuple-beat

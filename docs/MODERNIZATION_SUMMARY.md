@@ -32,11 +32,11 @@ The work landed as phased pull requests, each reviewed and merged only with CI g
    MySQL schema behaved, so the fixes in `legacy/` could be shown to change only what they
    meant to.
 3. **Stage 1: the database core**
-   ([#1](https://github.com/ManvGit17/Music-Streaming-Application-Database/pull/1)).
+   ([#1](https://github.com/ManvGit17/tuple-beat/pull/1)).
    The PostgreSQL 18 schema, the API, the data generator, the CLI, tests and CI.
 4. **Stage 2: the web app**
-   ([#2](https://github.com/ManvGit17/Music-Streaming-Application-Database/pull/2),
-   [#4](https://github.com/ManvGit17/Music-Streaming-Application-Database/pull/4)).
+   ([#2](https://github.com/ManvGit17/tuple-beat/pull/2),
+   [#4](https://github.com/ManvGit17/tuple-beat/pull/4)).
    The React app, the SQL Lens and Schema Atlas, PGlite in the browser, and GitHub Pages.
 5. **Stage 3: presence and documentation.** License, branding, screenshots, the README, the
    docs site, the changelog, contribution material and launch drafts.
