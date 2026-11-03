@@ -23,7 +23,14 @@ const context = await browser.newContext({
 const page = await context.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
-page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text().slice(0, 300)}`));
+// On GitHub Pages every deep link is served by 404.html (the SPA fallback), which the console
+// reports as a failed load even though the app renders. That one message isn't a problem.
+const pagesFallback = !/localhost|127\.0\.0\.1/.test(base);
+page.on("console", (m) => {
+  if (m.type() !== "error") return;
+  if (pagesFallback && m.text().includes("status of 404")) return;
+  errors.push(`console: ${m.text().slice(0, 300)}`);
+});
 
 const shot = async (name, opts = {}) => {
   await page.waitForTimeout(opts.wait ?? 900);
@@ -125,7 +132,7 @@ await step("atlas", async () => {
 await step("admin", async () => {
   await page.goto(`${base}/sign-in`);
   await page.getByRole("button", { name: /^Admin/ }).click();
-  await page.waitForURL(`${base}/`);
+  await page.waitForURL((url) => !url.pathname.endsWith("/sign-in"));
   await page.goto(`${base}/admin`);
   await page.getByText("Operations").waitFor();
   await shot("17-admin", { wait: 2000, full: true });
