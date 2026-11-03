@@ -42,12 +42,12 @@ function Seek() {
           player.seek(v ?? 0);
           setDragging(null);
         }}
-        aria-label="Seek"
       >
         <Slider.Track className="relative h-1 flex-1 overflow-hidden rounded-full bg-line-strong">
           <Slider.Range className="absolute h-full rounded-full bg-ink group-hover:bg-accent" />
         </Slider.Track>
         <Slider.Thumb
+          aria-label="Seek"
           aria-valuetext={`${duration(value)} of ${duration(total)}`}
           className="block size-3 rounded-full bg-ink opacity-0 shadow-float transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
         />
@@ -175,12 +175,14 @@ export function PlayerBar({ onExpand }: { onExpand: () => void }) {
           step={0.01}
           value={[player.volume]}
           onValueChange={([v]) => player.setVolume(v ?? 0)}
-          aria-label="Volume"
         >
           <Slider.Track className="relative h-1 flex-1 overflow-hidden rounded-full bg-line-strong">
             <Slider.Range className="absolute h-full rounded-full bg-ink group-hover:bg-accent" />
           </Slider.Track>
-          <Slider.Thumb className="block size-3 rounded-full bg-ink opacity-0 shadow-float group-hover:opacity-100 focus-visible:opacity-100" />
+          <Slider.Thumb
+            aria-label="Volume"
+            className="block size-3 rounded-full bg-ink opacity-0 shadow-float group-hover:opacity-100 focus-visible:opacity-100"
+          />
         </Slider.Root>
       </div>
     </section>

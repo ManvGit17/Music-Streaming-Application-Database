@@ -164,10 +164,14 @@ export function TrackList({
             <button
               type="button"
               onClick={() => (current ? player.toggle() : player.play(t, tracks))}
-              aria-label={current && player.playing ? `Pause ${t.title}` : `Play ${t.title}`}
               className="flex size-8 items-center justify-center rounded-full text-sm text-faint tabular hover:text-ink"
             >
+              {/* The visible number is decoration; the button's name comes from this text. */}
+              <span className="sr-only">
+                {current && player.playing ? `Pause ${t.title}` : `Play ${t.title}`}
+              </span>
               <span
+                aria-hidden
                 className={cn("group-hover:hidden group-focus-within:hidden", current && "hidden")}
               >
                 {numbered ? (t.track_number && !showAlbum ? t.track_number : i + 1) : "•"}
