@@ -51,7 +51,7 @@ The work landed as phased pull requests, each reviewed and merged only with CI g
 | PGlite for the demo | Reviewers can try the real database with no install and no server cost. |
 | Anchoring time windows to the data | Demo rankings stay meaningful instead of going blank a week later. |
 | Keeping v1 in `legacy/` | Every before-and-after claim can be checked. |
-| MIT license | Simple and permissive; chosen by the authors. |
+| MIT license | Simple and permissive; agreed with the original co-author. |
 | Astro Starlight for docs | Static, fast, searchable, and generates the API reference from the OpenAPI schema. |
 
 ## Verified numbers
@@ -72,7 +72,6 @@ The work landed as phased pull requests, each reviewed and merged only with CI g
 These need an account owner's action and weren't done automatically:
 
 - Upload `docs/assets/social-preview.png` in **Settings → General → Social preview**.
-- Confirm the MIT license with the co-author.
 - Turn on **private vulnerability reporting** under **Settings → Security**, which
   [SECURITY.md](../SECURITY.md) refers to.
 - Decide whether to tag `v2.0.0` and publish a GitHub release from the changelog.
