@@ -26,7 +26,7 @@ ready.
 
 ## BRIN or B-tree?
 
-[`scripts/bench_brin.py`](https://github.com/ManvGit17/Music-Streaming-Application-Database/blob/master/scripts/bench_brin.py)
+[`scripts/bench_brin.py`](https://github.com/ManvGit17/tuple-beat/blob/master/scripts/bench_brin.py)
 loads the million-play dataset and times a range query ending at the busiest day, with only the
 BRIN index, only a B-tree on `played_at`, or neither. The other indexes that end in `played_at`
 are hidden for the run, since PostgreSQL 18's skip scan can use them for a time range too.
@@ -78,7 +78,7 @@ listener. A matching trigger handles deletes, and likes work the same way. Inser
 
 ### Measured
 
-[`scripts/bench_counters.py`](https://github.com/ManvGit17/Music-Streaming-Application-Database/blob/master/scripts/bench_counters.py)
+[`scripts/bench_counters.py`](https://github.com/ManvGit17/tuple-beat/blob/master/scripts/bench_counters.py)
 loads the same data into two PostgreSQL 18 databases, one with a faithful port of the old
 row-level triggers:
 

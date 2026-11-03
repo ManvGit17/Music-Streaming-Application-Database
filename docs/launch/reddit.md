@@ -17,7 +17,7 @@ with PGlite and shows every query plan
 > work visible.
 >
 > Demo (no install; Postgres runs in your tab via PGlite):
-> https://manvgit17.github.io/Music-Streaming-Application-Database/
+> https://manvgit17.github.io/tuple-beat/
 >
 > Every screen has a "SQL Lens" showing the statements it ran, the EXPLAIN ANALYZE tree and the
 > triggers that fired. Some of what's in there:
@@ -39,7 +39,7 @@ with PGlite and shows every query plan
 > `::vector(8)` cast is needed in the index expression because function results lose their
 > type modifier.
 >
-> Design notes: https://github.com/ManvGit17/Music-Streaming-Application-Database/blob/master/docs/database.md
+> Design notes: https://github.com/ManvGit17/tuple-beat/blob/master/docs/database.md
 >
 > Feedback on the schema very welcome, especially anything you'd do differently at scale.
 
@@ -60,7 +60,7 @@ real data. Here's what I changed.
 > I rebuilt it on PostgreSQL 18 with tests against a real database, a data generator that can
 > produce a million plays, and a web app that shows you the SQL behind every screen. The demo
 > runs PostgreSQL in your browser, so there's nothing to install:
-> https://manvgit17.github.io/Music-Streaming-Application-Database/
+> https://manvgit17.github.io/tuple-beat/
 >
 > What I'd suggest to anyone doing a database project:
 >
@@ -72,4 +72,4 @@ real data. Here's what I changed.
 > 4. Keep the old version running so you can compare honestly.
 >
 > Code is MIT-licensed, and there's a list of good first issues if you want to contribute:
-> https://github.com/ManvGit17/Music-Streaming-Application-Database
+> https://github.com/ManvGit17/tuple-beat

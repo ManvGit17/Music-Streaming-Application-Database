@@ -3,7 +3,7 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
-const repo = "https://github.com/ManvGit17/Music-Streaming-Application-Database";
+const repo = "https://github.com/ManvGit17/tuple-beat";
 
 export default defineConfig({
   site: "https://manvgit17.github.io",

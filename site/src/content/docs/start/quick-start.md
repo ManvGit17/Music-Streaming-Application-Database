@@ -7,7 +7,7 @@ sidebar:
 
 ## In the browser
 
-Open the [live demo](https://manvgit17.github.io/Music-Streaming-Application-Database/) and
+Open the [live demo](https://manvgit17.github.io/tuple-beat/) and
 choose **Explore as a listener**.
 
 On the first visit the app downloads PostgreSQL as WebAssembly (a few megabytes), applies the
@@ -22,7 +22,7 @@ Everything you do stays in your browser. Nothing is sent anywhere.
 You need Docker with Compose.
 
 ```bash
-git clone https://github.com/ManvGit17/Music-Streaming-Application-Database.git vamusic
+git clone https://github.com/ManvGit17/tuple-beat.git vamusic
 cd vamusic
 docker compose up
 ```

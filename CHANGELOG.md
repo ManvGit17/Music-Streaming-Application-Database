@@ -117,5 +117,5 @@ In the original project, which is kept runnable in `legacy/`:
 The original database mini project: a MySQL schema with 19 tables,
 triggers, stored procedures, functions and views, and Tkinter apps for listeners and admins.
 
-[2.0.0]: https://github.com/ManvGit17/Music-Streaming-Application-Database/compare/caa7066...v2.0.0
-[1.0.0]: https://github.com/ManvGit17/Music-Streaming-Application-Database/tree/caa7066
+[2.0.0]: https://github.com/ManvGit17/tuple-beat/compare/caa7066...v2.0.0
+[1.0.0]: https://github.com/ManvGit17/tuple-beat/tree/caa7066
