@@ -67,6 +67,36 @@ def test_me(client, john):
     assert me["plays"] > 0
 
 
+def test_subscription_history_is_the_caller_s_own(client, john, admin, api_urls):
+    import psycopg
+
+    owner, _ = api_urls
+    with psycopg.connect(owner) as conn:
+        periods, payments = conn.execute(
+            """SELECT count(DISTINCT s.subscription_id), count(p.payment_id)
+               FROM vamusic.subscription s
+               JOIN vamusic.app_user u USING (user_id)
+               LEFT JOIN vamusic.payment p USING (subscription_id)
+               WHERE u.username = 'john_doe'"""
+        ).fetchone()
+    history = client.get("/api/me/subscriptions", headers=john).json()
+    assert len(history) == periods > 0
+    assert sum(len(h["payments"]) for h in history) == payments
+    assert [h["starts"] for h in history] == sorted((h["starts"] for h in history), reverse=True)
+    # Admins can read every subscription, but this route still shows only their own.
+    with psycopg.connect(owner) as conn:
+        admins = conn.execute(
+            """SELECT count(*) FROM vamusic.subscription s
+               JOIN vamusic.app_user u USING (user_id) WHERE u.username = 'admin'"""
+        ).fetchone()[0]
+    assert len(client.get("/api/me/subscriptions", headers=admin).json()) == admins
+
+
+def test_subscription_history_needs_sign_in(client, newbie):
+    assert client.get("/api/me/subscriptions").status_code == 401
+    assert client.get("/api/me/subscriptions", headers=newbie).json() == []
+
+
 def test_update_profile(client, newbie):
     res = client.patch("/api/me", headers=newbie, json={"display_name": "DJ Test", "country": "IN"})
     assert res.status_code == 200

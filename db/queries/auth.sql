@@ -30,3 +30,17 @@ UPDATE vamusic.app_user
 SET display_name = coalesce(:display_name, display_name),
     country = coalesce(:country, country)
 WHERE user_id = vamusic.current_user_id();
+
+-- name: subscriptions
+-- RLS already limits both tables to the caller's rows; the WHERE also keeps admins to their own.
+SELECT p.name AS plan, p.price, lower(s.active_during) AS starts, upper(s.active_during) AS ends,
+       s.status,
+       coalesce((SELECT jsonb_agg(jsonb_build_object('amount', pay.amount, 'method', pay.method,
+                                                     'status', pay.status, 'paid_at', pay.paid_at)
+                                  ORDER BY pay.paid_at)
+                 FROM vamusic.payment pay
+                 WHERE pay.subscription_id = s.subscription_id), '[]'::jsonb) AS payments
+FROM vamusic.subscription s
+JOIN vamusic.plan p USING (plan_id)
+WHERE s.user_id = vamusic.current_user_id()
+ORDER BY lower(s.active_during) DESC;
