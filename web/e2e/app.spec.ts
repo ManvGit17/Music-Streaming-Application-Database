@@ -32,6 +32,35 @@ test("search forgives typos", async ({ page }) => {
   await expect(first.getByText("fuzzy #1")).toBeVisible();
 });
 
+test("a search that finds nothing suggests popular tracks", async ({ page }) => {
+  await open(page, "/search?q=zzzzzz");
+  await expect(page.getByText("Nothing matched")).toBeVisible();
+  const suggestions = page.getByRole("region", { name: "Popular right now" });
+  await expect(suggestions.getByRole("button", { name: /^Play / })).toHaveCount(3);
+});
+
+test("the top bar shows the database role", async ({ page }) => {
+  await open(page);
+  await expect(page.getByText("Database role: anon")).toBeVisible();
+  await signInAs(page, /John Doe/);
+  await expect(page.getByText("Database role: listener")).toBeVisible();
+  await signInAs(page, /^Admin/);
+  await expect(page.getByText("Database role: admin")).toBeVisible();
+});
+
+test("a public playlist's link can be copied", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await signInAs(page, /John Doe/);
+  await page.getByRole("button", { name: "Create a playlist" }).click();
+  await expect(page).toHaveURL(/\/playlist\//);
+  await page.getByRole("button", { name: "Copy link" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText(/Link copied/)).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(page.url());
+  await page.getByRole("button", { name: "Make private" }).click();
+  await expect(page.getByRole("button", { name: "Copy link" })).toHaveCount(0);
+});
+
 test("a listener can sign in, play a song and see it in their history", async ({ page }) => {
   await signInAs(page, /John Doe/);
   await expect(page.getByRole("heading", { name: /John\./ })).toBeVisible();
@@ -45,9 +74,11 @@ test("a listener can sign in, play a song and see it in their history", async ({
     .trim();
   await row.getByRole("button", { name: /^Play / }).click();
   await expect(page.getByRole("region", { name: "Player" }).getByText(title)).toBeVisible();
-  // Plays shorter than five seconds aren't recorded; then skip to record this one.
-  await page.waitForTimeout(5500);
-  await page.getByRole("region", { name: "Player" }).getByRole("button", { name: "Next" }).click();
+  // Plays shorter than five seconds aren't recorded. Wait on the player's own clock rather
+  // than a fixed delay, which a busy machine can outrun, then skip to record this one.
+  const player = page.getByRole("region", { name: "Player" });
+  await expect(player.getByText(/^0:(0[6-9]|[1-5]\d)$/).first()).toBeVisible({ timeout: 30_000 });
+  await player.getByRole("button", { name: "Next" }).click();
   // Navigate inside the app, as a listener would: a full reload could beat the write to
   // IndexedDB that persists the play.
   await page.getByRole("link", { name: "Your library" }).click();
@@ -66,6 +97,13 @@ test("the SQL Lens shows each statement with its plan", async ({ page }) => {
     .click();
   await expect(lens.getByText("Execution plan")).toBeVisible();
   await expect(lens.getByRole("list", { name: "Query plan" })).toBeVisible();
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await lens
+    .getByRole("button", { name: /^Copy the SQL for / })
+    .first()
+    .click();
+  await expect(page.getByText(/SQL copied/)).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^-- \w+\.\w+/);
 });
 
 test("row-level security hides another listener's private playlist", async ({ page }) => {
