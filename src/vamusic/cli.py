@@ -105,13 +105,13 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=cmd_migrate)
 
     p = sub.add_parser("seed", help="load deterministic demo data into an empty database")
-    p.add_argument("--scale", choices=["tiny", "demo", "full"], default="demo")
+    p.add_argument("--scale", choices=["tiny", "web", "demo", "full"], default="demo")
     p.add_argument("--seed", type=int, default=17)
     p.add_argument("--if-empty", action="store_true", help="succeed quietly if already seeded")
     p.set_defaults(func=cmd_seed)
 
     p = sub.add_parser("export", help="write the dataset as gzipped COPY files for the web demo")
-    p.add_argument("--scale", choices=["tiny", "demo", "full"], default="demo")
+    p.add_argument("--scale", choices=["tiny", "web", "demo", "full"], default="web")
     p.add_argument("--seed", type=int, default=17)
     p.add_argument("--out", default="web/public/seed")
     p.set_defaults(func=cmd_export)
