@@ -147,7 +147,7 @@ export function LensDrawer() {
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 32 }}
           aria-label="SQL Lens"
-          className="glass fixed inset-y-0 right-0 z-40 flex w-full max-w-[30rem] flex-col border-y-0 border-r-0 shadow-float md:top-3 md:right-3 md:bottom-28 md:rounded-3xl md:border"
+          className="glass fixed inset-y-0 right-0 z-40 flex w-full max-w-[30rem] flex-col border-y-0 border-r-0 bg-surface-strong shadow-float md:top-16 md:right-3 md:bottom-28 md:rounded-3xl md:border"
         >
           <header className="flex items-start gap-3 border-b border-line px-5 pt-5 pb-4">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-accent-soft text-accent">
