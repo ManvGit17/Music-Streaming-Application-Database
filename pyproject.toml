@@ -1,6 +1,6 @@
 [project]
 name = "vamusic"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "A database-first music streaming platform on PostgreSQL 18."
 readme = "README.md"
 requires-python = ">=3.12"
