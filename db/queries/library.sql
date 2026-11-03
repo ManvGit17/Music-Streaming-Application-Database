@@ -41,7 +41,11 @@ VALUES (vamusic.current_user_id(), :track_id, :ms_played, :completed,
 RETURNING played_at;
 
 -- name: history
-SELECT to_jsonb(c) AS track, e.played_at, e.ms_played, e.completed, e.device
+-- tableoid names the monthly partition each row was read from.
+SELECT to_jsonb(c) AS track, e.played_at, e.ms_played, e.completed, e.device,
+       (SELECT format('%I.%I', n.nspname, p.relname)
+        FROM pg_class p JOIN pg_namespace n ON n.oid = p.relnamespace
+        WHERE p.oid = e.tableoid) AS partition
 FROM vamusic.listening_event e
 JOIN vamusic.track_card c ON c.track_id = e.track_id
 WHERE e.user_id = vamusic.current_user_id()

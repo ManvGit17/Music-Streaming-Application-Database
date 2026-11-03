@@ -61,6 +61,14 @@ def test_recording_a_play(client, newbie):
     assert client.get("/api/me", headers=newbie).json()["plays"] == 1
 
 
+def test_history_names_each_play_s_partition(client, john):
+    history = client.get("/api/me/history", headers=john).json()
+    assert history
+    for play in history:
+        month = play["played_at"][:7].replace("-", "_")
+        assert play["partition"] == f"vamusic.listening_event_{month}"
+
+
 def test_plays_require_sign_in(client):
     track = first_track(client)
     res = client.post("/api/me/plays", json={"track_id": track["id"], "ms_played": 1})

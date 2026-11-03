@@ -40,6 +40,22 @@ class Session(Model):
     role: Literal["listener", "admin"]
 
 
+class Payment(Model):
+    amount: float
+    method: str
+    status: str
+    paid_at: datetime
+
+
+class Subscription(Model):
+    plan: str
+    price: float
+    starts: date
+    ends: date | None
+    status: str
+    payments: list[Payment]
+
+
 class Me(Model):
     id: UUID
     username: str
@@ -155,6 +171,7 @@ class Play(Model):
     ms_played: int
     completed: bool
     device: str
+    partition: str = Field(description="The monthly partition the play is stored in")
 
 
 # --- playlists --------------------------------------------------------------------------------

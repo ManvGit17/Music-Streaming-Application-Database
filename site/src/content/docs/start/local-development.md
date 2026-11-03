@@ -37,6 +37,7 @@ uv run vamusic serve --reload
 | `vamusic seed --scale demo` | Generates and loads a dataset into an empty database |
 | `vamusic export` | Writes the dataset as gzipped `COPY` files for the browser demo |
 | `vamusic refresh` | Refreshes the analytics materialized views and prints their timings |
+| `vamusic partitions` | Lists the `listening_event` partitions with estimated rows and size |
 | `vamusic serve` | Runs the HTTP API |
 | `vamusic openapi` | Writes the OpenAPI document this site's API reference is built from |
 

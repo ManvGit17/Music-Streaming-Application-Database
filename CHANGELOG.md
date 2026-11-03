@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `GET /api/me/history` names the monthly partition each play is stored in (#8).
+- `vamusic partitions` lists listening partitions with estimated rows and size (#9).
+- `GET /api/me/subscriptions` returns a listener's subscription periods and payments (#14).
+- Migration 0011 gives every function a `COMMENT ON`, enforced by a test (#15).
+- A test for trending's three-day half-life (#13).
+
 ## [2.0.0] - 2026-11-03
 
 A rebuild of the 2025 course project on PostgreSQL 18, with a web app, a browser demo and

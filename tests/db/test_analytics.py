@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -18,6 +19,48 @@ def test_trending_ranks_are_dense_from_one(db):
     ranks = [r["rank"] for r in db.rows("SELECT rank FROM trending_track ORDER BY rank LIMIT 5")]
     assert ranks[0] == 1
     assert ranks == sorted(ranks)
+
+
+def test_trending_decays_with_a_three_day_half_life(db):
+    """A play three days before the anchor is worth half a play at the anchor."""
+    anchor = db.value("SELECT max(played_at) FROM listening_event") + timedelta(days=40)
+    # Two tracks with no plays or likes in the 30 days before the new anchor.
+    quiet = [
+        r["track_id"]
+        for r in db.rows(
+            """SELECT t.track_id FROM track t
+               WHERE NOT EXISTS (SELECT 1 FROM listening_event e WHERE e.track_id = t.track_id
+                                 AND e.played_at > %(anchor)s - interval '30 days')
+                 AND NOT EXISTS (SELECT 1 FROM track_like l WHERE l.track_id = t.track_id
+                                 AND l.liked_at > %(anchor)s - interval '30 days')
+               ORDER BY t.track_id LIMIT 2""",
+            {"anchor": anchor},
+        )
+    ]
+    fresh, older = quiet
+    user = db.value("SELECT min(user_id) FROM app_user")
+    db.rows(
+        """INSERT INTO listening_event (user_id, track_id, played_at, ms_played, completed)
+           VALUES (%(u)s, %(fresh)s, %(anchor)s, 1000, true),
+                  (%(u)s, %(older)s, %(anchor)s - interval '3 days', 1000, true)""",
+        {"u": user, "fresh": fresh, "older": older, "anchor": anchor},
+    )
+    db.rows("REFRESH MATERIALIZED VIEW trending_track")
+
+    scores = {
+        r["track_id"]: r
+        for r in db.rows(
+            "SELECT track_id, score, rank FROM trending_track WHERE track_id = ANY(%s)",
+            ([fresh, older],),
+        )
+    }
+    assert scores[fresh]["rank"] < scores[older]["rank"]
+    # score = 0.5 * decayed plays + 2 * listeners; one listener each, so the decayed parts
+    # are (score - 2) / 0.5: 1.0 for the fresh play and 0.5 for the three-day-old one.
+    fresh_decayed = (scores[fresh]["score"] - 2) / Decimal("0.5")
+    older_decayed = (scores[older]["score"] - 2) / Decimal("0.5")
+    assert fresh_decayed == pytest.approx(Decimal(1), abs=Decimal("0.01"))
+    assert older_decayed == pytest.approx(Decimal("0.5"), abs=Decimal("0.01"))
 
 
 def test_refresh_reports_every_rollup(db):

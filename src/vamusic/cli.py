@@ -1,4 +1,4 @@
-"""``vamusic`` command line: migrate, seed, refresh, serve and export the API schema."""
+"""``vamusic`` command line: migrate, seed, refresh, inspect partitions, serve, export the API."""
 
 from __future__ import annotations
 
@@ -83,6 +83,22 @@ def cmd_refresh(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_partitions(_args: argparse.Namespace) -> int:
+    from vamusic.db import queries
+
+    with _connect() as conn:
+        rows = conn.execute(queries.get("admin.partitions").psycopg).fetchall()
+    if not rows:
+        print("no listening_event partition holds rows yet")
+        return 0
+    print(f"{'partition':<32} {'rows (estimate)':>16} {'size':>10}  bounds")
+    for name, bounds, estimated_rows, size in rows:
+        print(f"{name:<32} {estimated_rows:>16,} {size / 1024**2:>8.1f} MB  {bounds}")
+    total = sum(r[2] for r in rows)
+    print(f"{len(rows)} partitions, about {total:,} rows")
+    return 0
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
@@ -138,6 +154,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("refresh", help="refresh the analytics materialized views")
     p.set_defaults(func=cmd_refresh)
+
+    p = sub.add_parser("partitions", help="list listening_event partitions with rows and size")
+    p.set_defaults(func=cmd_partitions)
 
     p = sub.add_parser("serve", help="run the HTTP API")
     p.add_argument("--host", default="127.0.0.1")
