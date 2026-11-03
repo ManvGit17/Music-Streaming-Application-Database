@@ -18,12 +18,16 @@ from psycopg.rows import dict_row
 
 LensMode = Literal["off", "trace", "plan"]
 
-_EXPLAINABLE = re.compile(r"^\s*(WITH|SELECT|INSERT|UPDATE|DELETE)\b", re.IGNORECASE)
+# Leading "-- ..." comment lines (shared queries start with one) are skipped.
+_EXPLAINABLE = re.compile(
+    r"^(?:\s*--[^\n]*\n)*\s*(WITH|SELECT|INSERT|UPDATE|DELETE)\b", re.IGNORECASE
+)
 
 
 @dataclass
 class Statement:
     sql: str
+    name: str | None
     params: list[Any]
     ms: float
     rows: int
@@ -34,6 +38,7 @@ class Statement:
 
     def as_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
+            "name": self.name,
             "sql": self.sql,
             "params": [str(p) for p in self.params],
             "ms": self.ms,
@@ -93,9 +98,13 @@ def explain(
 
 
 def run(
-    conn: psycopg.Connection[Any], trace: Trace | None, sql: str, params: Any = None
+    conn: psycopg.Connection[Any],
+    trace: Trace | None,
+    sql: str,
+    params: Any = None,
+    name: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Execute ``sql`` and, if tracing, record it."""
+    """Execute ``sql`` and, if tracing, record it under the shared query ``name``."""
     text = clean(sql)
     plan = None
     triggers: list[dict[str, Any]] = []
@@ -113,6 +122,6 @@ def run(
     if trace:
         values = list(params.values()) if isinstance(params, dict) else list(params or [])
         trace.statements.append(
-            Statement(text, values, elapsed, count, plan, triggers, planning, execution)
+            Statement(text, name, values, elapsed, count, plan, triggers, planning, execution)
         )
     return rows

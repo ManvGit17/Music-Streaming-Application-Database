@@ -63,7 +63,8 @@ def test_lens_plan_shows_triggers_and_writes_once(client, newbie):
         params={"lens": "plan"},
         json={"track_id": track["id"], "ms_played": 1000},
     ).json()
-    insert = next(s for s in body["lens"]["statements"] if s["sql"].startswith("INSERT"))
+    insert = next(s for s in body["lens"]["statements"] if s["name"] == "library.record_play")
+    assert "INSERT INTO vamusic.listening_event" in insert["sql"]
     assert insert["plan"]["Node Type"] == "ModifyTable"
     assert "listening_event_count_insert" in {t["name"] for t in insert["triggers"]}
     # The plan ran in a rolled-back savepoint, so exactly one play was recorded.
