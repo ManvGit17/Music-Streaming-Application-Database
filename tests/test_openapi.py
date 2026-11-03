@@ -26,3 +26,11 @@ def test_every_operation_is_described():
         if not operation.get("description")
     ]
     assert not missing, f"add a docstring to: {', '.join(missing)}"
+
+
+def test_operation_ids_are_unique():
+    import json
+
+    document = json.loads(openapi_json())
+    ids = [op["operationId"] for ops in document["paths"].values() for op in ops.values()]
+    assert len(ids) == len(set(ids)), "two routes share a function name"

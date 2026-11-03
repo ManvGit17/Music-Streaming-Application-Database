@@ -56,6 +56,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "`Authorization: Bearer <token>`. Every demo account's password is `vamusic`."
         ),
         lifespan=lifespan,
+        # Operation ids are the route functions' names, which keeps reference URLs readable.
+        generate_unique_id_function=lambda route: route.name,
     )
     app.state.settings = settings
     app.add_middleware(
