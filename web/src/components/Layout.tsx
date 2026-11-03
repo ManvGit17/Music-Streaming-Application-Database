@@ -168,7 +168,7 @@ function Sidebar() {
           ))}
           {!session ? (
             <li className="px-3 py-2 text-xs text-faint">
-              <Link to="/sign-in" className="text-accent hover:underline">
+              <Link to="/sign-in" className="text-accent underline underline-offset-2">
                 Sign in
               </Link>{" "}
               to see your playlists.
