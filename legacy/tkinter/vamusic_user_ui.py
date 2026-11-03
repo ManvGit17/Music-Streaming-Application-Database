@@ -1,7 +1,7 @@
 # vamusic_user_ui.py
 """
 User UI for VaMusic.
-Requires: db_utils.py, mysql-connector-python, pillow, bcrypt
+Requires: db_utils.py, mysql-connector-python, bcrypt
 Features:
  - Login/Register (bcrypt)
  - Browse/Search tracks
@@ -13,8 +13,11 @@ Features:
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
-from db_utils import safe_execute, call_procedure, hash_password, verify_password
 import webbrowser
+
+import mysql.connector
+
+from db_utils import safe_execute, call_procedure, hash_password, verify_password
 
 class UserApp(tk.Tk):
     def __init__(self):
@@ -75,6 +78,16 @@ class UserApp(tk.Tk):
         self.library_tab.load_library()
         self.profile_tab.load_profile()
 
+def add_track_to_playlist(playlist_id, track_id):
+    """Add a track to a playlist; return False (with a message) if it is already there."""
+    try:
+        safe_execute("INSERT INTO PlaylistTrack (playlist_id, track_id) VALUES (%s,%s)", (playlist_id, track_id))
+    except mysql.connector.IntegrityError:
+        messagebox.showinfo("Already added", "That track is already in this playlist.")
+        return False
+    messagebox.showinfo("Added", "Track added to playlist.")
+    return True
+
 # ---------- Dialogs ----------
 class LoginDialog(tk.Toplevel):
     def __init__(self, parent):
@@ -121,21 +134,22 @@ class BrowseTab(ttk.Frame):
         btns = ttk.Frame(self); btns.pack(fill='x')
         ttk.Button(btns, text="Like/Unlike", command=self.toggle_like).pack(side='left', padx=6)
         ttk.Button(btns, text="Add to Playlist", command=self.add_to_playlist).pack(side='left', padx=6)
-        self.load_default()~
+        self.load_default()
 
     def load_default(self):
         uid = self.app.user['user_id'] if self.app.user else -1
-        
+
         # Use GetUserRecommendations if user is logged in, otherwise show all tracks
         if self.app.user:
             rows = call_procedure("GetUserRecommendations", (uid, 200)) or []
             # Map procedure output to expected column names
+            liked_ids = self._liked_ids(uid)
             for row in rows:
                 row['title'] = row.get('track_title', '')
                 row['artist'] = row.get('artist_name', '')
                 row['album'] = row.get('album_title', '')
                 row['duration'] = row.get('duration_seconds', '')
-                row['liked'] = 'Yes'  # Recommendations are new, so not liked yet
+                row['liked'] = 'Yes' if row['track_id'] in liked_ids else 'No'
         else:
             # Show trending tracks if not logged in
             rows = safe_execute("""
@@ -144,8 +158,12 @@ class BrowseTab(ttk.Frame):
                 FROM Track t JOIN Album al ON t.album_id=al.album_id JOIN Artist ar ON al.artist_id=ar.artist_id
                 LIMIT 200
             """, (uid,), fetch=True) or []
-        
+
         self._populate(rows)
+
+    def _liked_ids(self, uid):
+        rows = safe_execute("SELECT track_id FROM UserLikedTrack WHERE user_id=%s", (uid,), fetch=True) or []
+        return {r['track_id'] for r in rows}
 
     def _populate(self, rows):
         for r in self.tv.get_children(): self.tv.delete(r)
@@ -186,7 +204,7 @@ class BrowseTab(ttk.Frame):
 
     def toggle_like(self):
         if not self.app.user: messagebox.showwarning("Sign in","Please sign in"); return
-        tid = self.get_selected(); 
+        tid = self.get_selected();
         if not tid: return
         exists = safe_execute("SELECT 1 FROM UserLikedTrack WHERE user_id=%s AND track_id=%s", (self.app.user['user_id'], tid), fetch=True)
         if exists:
@@ -199,7 +217,7 @@ class BrowseTab(ttk.Frame):
 
     def add_to_playlist(self):
         if not self.app.user: messagebox.showwarning("Sign in","Please sign in"); return
-        tid = self.get_selected(); 
+        tid = self.get_selected();
         if not tid: return
         pls = safe_execute("SELECT playlist_id, playlist_name FROM Playlist WHERE created_by=%s", (self.app.user['user_id'],), fetch=True) or []
         if not pls:
@@ -211,8 +229,7 @@ class BrowseTab(ttk.Frame):
             return
         choice = simpledialog.askinteger("Choose", "Enter playlist_id:\n" + "\n".join([f"{p['playlist_id']}: {p['playlist_name']}" for p in pls]))
         if choice:
-            safe_execute("INSERT INTO PlaylistTrack (playlist_id, track_id) VALUES (%s,%s)", (choice, tid))
-            messagebox.showinfo("Added","Track added to playlist.")
+            add_track_to_playlist(choice, tid)
 
     def open_file(self, _event=None):
         sel = self.tv.selection()
@@ -290,18 +307,18 @@ class PlaylistsTab(ttk.Frame):
 
     def add_from_browse(self):
         if not self.app.user: messagebox.showwarning("Sign in","Please sign in"); return
-        browse = self.app.nb.nametowidget(self.app.nb.tabs()[0].split('.')[0]) if False else self.app.browse_tab
+        browse = self.app.browse_tab
         sel = browse.tv.selection()
         if not sel: messagebox.showwarning("Select","Select a track in Browse tab"); return
         tid = int(browse.tv.item(sel[0],'values')[0])
         selp = self.tv.selection()
         if not selp: messagebox.showwarning("Select","Select a playlist"); return
         pid = int(self.tv.item(selp[0],'values')[0])
-        safe_execute("INSERT INTO PlaylistTrack (playlist_id, track_id) VALUES (%s,%s)", (pid, tid))
-        messagebox.showinfo("Added","Track added"); self.on_select(None)
+        if add_track_to_playlist(pid, tid):
+            self.on_select(None)
 
     def remove_selected(self):
-        sel = self.tracks_tv.selection(); 
+        sel = self.tracks_tv.selection();
         if not sel: messagebox.showwarning("Select","Select a track"); return
         tid = int(self.tracks_tv.item(sel[0],'values')[0])
         pid_sel = self.tv.selection()

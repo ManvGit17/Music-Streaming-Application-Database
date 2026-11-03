@@ -1,0 +1,20 @@
+name: Feature idea
+description: Suggest something VaMusic should do.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Who needs it and why. Problems are more useful than solutions.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What do you have in mind?
+      description: If it touches the database, sketch the tables, queries or constraints involved.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered

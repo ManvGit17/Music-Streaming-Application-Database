@@ -1,0 +1,8 @@
+# Allowlist: the build context holds only what the image needs, so local files never leak in.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src/
+!db/
+**/__pycache__

@@ -1,7 +1,7 @@
 -- ============================================================
 -- VaMusic merged schema + full sample data (ready to import)
--- Save as: va2music_merged.sql
--- Import: mysql -u root -p < va2music_merged.sql
+-- File: legacy/mysql/vamusic_v2.sql
+-- Import: mysql -u root -p < legacy/mysql/vamusic_v2.sql
 -- ============================================================
 
 DROP DATABASE IF EXISTS vamusic;
@@ -303,11 +303,11 @@ CREATE TRIGGER update_play_count
 AFTER INSERT ON ListeningHistory
 FOR EACH ROW
 BEGIN
-    UPDATE Track 
+    UPDATE Track
     SET play_count = play_count + 1,
         last_played = NEW.listened_at
     WHERE track_id = NEW.track_id;
-    
+
     UPDATE Artist a
     INNER JOIN Album al ON a.artist_id = al.artist_id
     INNER JOIN Track t ON al.album_id = t.album_id
@@ -339,7 +339,7 @@ FOR EACH ROW
 BEGIN
     IF OLD.subscription_id != NEW.subscription_id THEN
         INSERT INTO SubscriptionAudit(user_id, old_plan, new_plan, changed_by)
-        SELECT 
+        SELECT
             NEW.user_id,
             s1.plan_name,
             s2.plan_name,
@@ -354,7 +354,7 @@ CREATE TRIGGER update_album_track_count_insert
 AFTER INSERT ON Track
 FOR EACH ROW
 BEGIN
-    UPDATE Album 
+    UPDATE Album
     SET total_tracks = (
         SELECT COUNT(*) FROM Track WHERE album_id = NEW.album_id
     )
@@ -365,7 +365,7 @@ CREATE TRIGGER update_album_track_count_delete
 AFTER DELETE ON Track
 FOR EACH ROW
 BEGIN
-    UPDATE Album 
+    UPDATE Album
     SET total_tracks = (
         SELECT COUNT(*) FROM Track WHERE album_id = OLD.album_id
     )
@@ -379,25 +379,25 @@ BEGIN
     DECLARE v_recent_plays INT;
     DECLARE v_unique_listeners INT;
     DECLARE v_favorite_count INT;
-    
+
     SELECT COUNT(*) INTO v_recent_plays
     FROM ListeningHistory
     WHERE track_id = NEW.track_id
     AND listened_at > DATE_SUB(NOW(), INTERVAL 7 DAY);
-    
+
     SELECT COUNT(DISTINCT user_id) INTO v_unique_listeners
     FROM ListeningHistory
     WHERE track_id = NEW.track_id
     AND listened_at > DATE_SUB(NOW(), INTERVAL 30 DAY);
-    
+
     SELECT COUNT(*) INTO v_favorite_count
     FROM UserFavorites
     WHERE track_id = NEW.track_id;
-    
-    UPDATE Track 
-    SET trending_score = 
-        (v_recent_plays * 0.5) + 
-        (v_unique_listeners * 2) + 
+
+    UPDATE Track
+    SET trending_score =
+        (v_recent_plays * 0.5) +
+        (v_unique_listeners * 2) +
         (v_favorite_count * 1.5)
     WHERE track_id = NEW.track_id;
 END//
@@ -407,7 +407,7 @@ AFTER INSERT ON UserPlaylist
 FOR EACH ROW
 BEGIN
     IF NEW.is_owner = FALSE THEN
-        UPDATE Playlist 
+        UPDATE Playlist
         SET follower_count = follower_count + 1
         WHERE playlist_id = NEW.playlist_id;
     END IF;
@@ -418,7 +418,7 @@ AFTER DELETE ON UserPlaylist
 FOR EACH ROW
 BEGIN
     IF OLD.is_owner = FALSE THEN
-        UPDATE Playlist 
+        UPDATE Playlist
         SET follower_count = follower_count - 1
         WHERE playlist_id = OLD.playlist_id;
     END IF;
@@ -441,7 +441,7 @@ CREATE PROCEDURE GetUserRecommendations(
     IN p_limit INT
 )
 BEGIN
-    SELECT DISTINCT 
+    SELECT DISTINCT
         t.track_id,
         t.track_title,
         ar.artist_name,
@@ -468,8 +468,8 @@ BEGIN
     )
     AND t.track_id NOT IN (
         -- Exclude recently played tracks
-        SELECT DISTINCT track_id 
-        FROM ListeningHistory 
+        SELECT DISTINCT track_id
+        FROM ListeningHistory
         WHERE user_id = p_user_id
         AND listened_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
     )
@@ -491,28 +491,28 @@ BEGIN
     DECLARE v_track_id BIGINT;
     DECLARE v_position INT DEFAULT 1;
     DECLARE v_remaining_tracks TEXT;
-    
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error creating playlist';
     END;
-    
+
     START TRANSACTION;
-    
+
     -- Create playlist
     INSERT INTO Playlist(playlist_name, created_by, description, is_public)
     VALUES(p_playlist_name, p_user_id, p_description, p_is_public);
-    
+
     SET v_playlist_id = LAST_INSERT_ID();
-    
+
     -- Add user as owner
     INSERT INTO UserPlaylist(user_id, playlist_id, is_owner)
     VALUES(p_user_id, v_playlist_id, TRUE);
-    
+
     -- Parse and add tracks
     SET v_remaining_tracks = p_track_ids;
-    
+
     WHILE LENGTH(v_remaining_tracks) > 0 DO
         IF LOCATE(',', v_remaining_tracks) > 0 THEN
             SET v_track_id = SUBSTRING(v_remaining_tracks, 1, LOCATE(',', v_remaining_tracks) - 1);
@@ -521,15 +521,15 @@ BEGIN
             SET v_track_id = v_remaining_tracks;
             SET v_remaining_tracks = '';
         END IF;
-        
+
         INSERT INTO PlaylistTrack(playlist_id, track_id, position, added_by)
         VALUES(v_playlist_id, v_track_id, v_position, p_user_id);
-        
+
         SET v_position = v_position + 1;
     END WHILE;
-    
+
     COMMIT;
-    
+
     SELECT v_playlist_id as new_playlist_id, v_position - 1 as tracks_added;
 END//
 
@@ -541,7 +541,7 @@ CREATE PROCEDURE GetUserAnalytics(
 )
 BEGIN
     DECLARE v_date_filter DATE;
-    
+
     SET v_date_filter = CASE p_period
         WHEN 'daily' THEN DATE_SUB(NOW(), INTERVAL 1 DAY)
         WHEN 'weekly' THEN DATE_SUB(NOW(), INTERVAL 7 DAY)
@@ -549,9 +549,9 @@ BEGIN
         WHEN 'yearly' THEN DATE_SUB(NOW(), INTERVAL 365 DAY)
         ELSE DATE_SUB(NOW(), INTERVAL 7 DAY)
     END;
-    
+
     -- Total listening time
-    SELECT 
+    SELECT
         'Total Listening Time' as metric,
         CONCAT(
             FLOOR(SUM(playback_duration) / 3600), 'h ',
@@ -559,9 +559,9 @@ BEGIN
         ) as value
     FROM ListeningHistory
     WHERE user_id = p_user_id AND listened_at >= v_date_filter;
-    
+
     -- Top artists
-    SELECT 
+    SELECT
         'Top Artists' as metric,
         ar.artist_name,
         COUNT(DISTINCT lh.track_id) as unique_tracks,
@@ -574,15 +574,15 @@ BEGIN
     GROUP BY ar.artist_id
     ORDER BY total_plays DESC
     LIMIT 5;
-    
+
     -- Top genres
-    SELECT 
+    SELECT
         'Top Genres' as metric,
         g.genre_name,
         COUNT(*) as play_count,
         CONCAT(ROUND(COUNT(*) * 100.0 / (
-            SELECT COUNT(*) 
-            FROM ListeningHistory 
+            SELECT COUNT(*)
+            FROM ListeningHistory
             WHERE user_id = p_user_id AND listened_at >= v_date_filter
         ), 1), '%') as percentage
     FROM ListeningHistory lh
@@ -593,9 +593,9 @@ BEGIN
     GROUP BY g.genre_id
     ORDER BY play_count DESC
     LIMIT 5;
-    
+
     -- Listening pattern by hour
-    SELECT 
+    SELECT
         'Hourly Pattern' as metric,
         HOUR(listened_at) as hour,
         COUNT(*) as plays
@@ -615,7 +615,7 @@ CREATE PROCEDURE SearchTracks(
     IN p_offset INT
 )
 BEGIN
-    SELECT 
+    SELECT
         t.track_id,
         t.track_title,
         ar.artist_name,
@@ -628,8 +628,8 @@ BEGIN
     INNER JOIN Album al ON t.album_id = al.album_id
     INNER JOIN Artist ar ON al.artist_id = ar.artist_id
     LEFT JOIN Genre g ON al.genre_id = g.genre_id
-    WHERE 
-        (p_search_term IS NULL OR 
+    WHERE
+        (p_search_term IS NULL OR
          t.track_title LIKE CONCAT('%', p_search_term, '%') OR
          ar.artist_name LIKE CONCAT('%', p_search_term, '%') OR
          al.album_title LIKE CONCAT('%', p_search_term, '%'))
@@ -645,7 +645,7 @@ CREATE PROCEDURE GetTrendingTracks(
     IN p_limit INT
 )
 BEGIN
-    SELECT 
+    SELECT
         t.track_id,
         t.track_title,
         ar.artist_name,
@@ -657,7 +657,7 @@ BEGIN
     FROM Track t
     INNER JOIN Album al ON t.album_id = al.album_id
     INNER JOIN Artist ar ON al.artist_id = ar.artist_id
-    LEFT JOIN ListeningHistory lh ON t.track_id = lh.track_id 
+    LEFT JOIN ListeningHistory lh ON t.track_id = lh.track_id
         AND lh.listened_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
     LEFT JOIN UserFavorites uf ON t.track_id = uf.track_id
     GROUP BY t.track_id
@@ -676,11 +676,11 @@ BEGIN
     DECLARE v_hours INT;
     DECLARE v_minutes INT;
     DECLARE v_seconds INT;
-    
+
     SET v_hours = FLOOR(p_seconds / 3600);
     SET v_minutes = FLOOR((p_seconds % 3600) / 60);
     SET v_seconds = p_seconds % 60;
-    
+
     IF v_hours > 0 THEN
         RETURN CONCAT(v_hours, ':', LPAD(v_minutes, 2, '0'), ':', LPAD(v_seconds, 2, '0'));
     ELSE
@@ -692,14 +692,13 @@ DROP FUNCTION IF EXISTS GetUserTier//
 CREATE FUNCTION GetUserTier(p_user_id BIGINT)
 RETURNS VARCHAR(50)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_minutes INT;
-    
-    SELECT COALESCE(total_minutes, 0) INTO v_total_minutes
-    FROM UserStatistics
-    WHERE user_id = p_user_id;
-    
+
+    -- A listener with no statistics row has listened for 0 minutes.
+    SET v_total_minutes = COALESCE(
+        (SELECT total_minutes FROM UserStatistics WHERE user_id = p_user_id), 0);
+
     RETURN CASE
         WHEN v_total_minutes = 0 THEN 'New Listener'
         WHEN v_total_minutes < 100 THEN 'Casual Listener'
@@ -714,19 +713,22 @@ DROP FUNCTION IF EXISTS CalculateMonthlyRevenue//
 CREATE FUNCTION CalculateMonthlyRevenue(p_month INT, p_year INT)
 RETURNS DECIMAL(10,2)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_revenue DECIMAL(10,2);
-    
+    DECLARE v_month_start DATE;
+    DECLARE v_month_end DATE;
+
+    -- A subscription counts if it overlaps any day of the month.
+    SET v_month_start = MAKEDATE(p_year, 1) + INTERVAL (p_month - 1) MONTH;
+    SET v_month_end = LAST_DAY(v_month_start);
+
     SELECT COALESCE(SUM(s.price), 0) INTO v_total_revenue
     FROM UserSubscription us
     INNER JOIN Subscription s ON us.subscription_id = s.subscription_id
-    WHERE MONTH(us.start_date) <= p_month
-    AND YEAR(us.start_date) <= p_year
-    AND (us.end_date IS NULL OR 
-         (MONTH(us.end_date) >= p_month AND YEAR(us.end_date) >= p_year))
+    WHERE us.start_date <= v_month_end
+    AND (us.end_date IS NULL OR us.end_date >= v_month_start)
     AND us.status = 'active';
-    
+
     RETURN v_total_revenue;
 END//
 
@@ -734,15 +736,14 @@ DROP FUNCTION IF EXISTS GetPlaylistDuration//
 CREATE FUNCTION GetPlaylistDuration(p_playlist_id BIGINT)
 RETURNS VARCHAR(20)
 READS SQL DATA
-DETERMINISTIC
 BEGIN
     DECLARE v_total_seconds INT;
-    
+
     SELECT COALESCE(SUM(t.duration_seconds), 0) INTO v_total_seconds
     FROM PlaylistTrack pt
     INNER JOIN Track t ON pt.track_id = t.track_id
     WHERE pt.playlist_id = p_playlist_id;
-    
+
     RETURN FormatDuration(v_total_seconds);
 END//
 
@@ -751,7 +752,7 @@ DELIMITER ;
 
 DROP VIEW IF EXISTS ArtistDashboard;
 CREATE VIEW ArtistDashboard AS
-SELECT 
+SELECT
     ar.artist_id,
     ar.artist_name,
     ar.is_verified,
@@ -771,7 +772,7 @@ GROUP BY ar.artist_id;
 
 DROP VIEW IF EXISTS PopularPlaylists;
 CREATE VIEW PopularPlaylists AS
-SELECT 
+SELECT
     p.playlist_id,
     p.playlist_name,
     u.username as creator,
@@ -790,7 +791,7 @@ ORDER BY p.follower_count DESC;
 
 DROP VIEW IF EXISTS TrackPerformance;
 CREATE VIEW TrackPerformance AS
-SELECT 
+SELECT
     t.track_id,
     t.track_title,
     ar.artist_name,
@@ -836,18 +837,18 @@ INSERT INTO Subscription (plan_name, price, duration_days, download_limit, ad_fr
 ('Family', 14.99, 30, 500, TRUE, TRUE, TRUE, 6, 'Share with up to 6 family members'),
 ('Student', 2.99, 30, 50, TRUE, TRUE, TRUE, 1, 'Discounted plan for students');
 
--- Insert Users
+-- Insert Users (demo password for every account: vamusic)
 INSERT INTO User (username, email, password, first_name, last_name, country, date_of_birth) VALUES
-('john_doe', 'john@email.com', '$2b$10$YourHashedPasswordHere', 'John', 'Doe', 'US', '1990-05-15'),
-('jane_smith', 'jane@email.com', '$2b$10$YourHashedPasswordHere', 'Jane', 'Smith', 'GB', '1992-08-22'),
-('mike_wilson', 'mike@email.com', '$2b$10$YourHashedPasswordHere', 'Mike', 'Wilson', 'CA', '1988-03-10'),
-('sarah_jones', 'sarah@email.com', '$2b$10$YourHashedPasswordHere', 'Sarah', 'Jones', 'AU', '1995-11-28'),
-('alex_brown', 'alex@email.com', '$2b$10$YourHashedPasswordHere', 'Alex', 'Brown', 'IN', '1993-07-04'),
-('emma_davis', 'emma@email.com', '$2b$10$YourHashedPasswordHere', 'Emma', 'Davis', 'US', '1991-12-18'),
-('chris_lee', 'chris@email.com', '$2b$10$YourHashedPasswordHere', 'Chris', 'Lee', 'SG', '1994-09-30'),
-('lisa_martin', 'lisa@email.com', '$2b$10$YourHashedPasswordHere', 'Lisa', 'Martin', 'FR', '1989-06-12'),
-('david_garcia', 'david@email.com', '$2b$10$YourHashedPasswordHere', 'David', 'Garcia', 'ES', '1996-02-25'),
-('amy_taylor', 'amy@email.com', '$2b$10$YourHashedPasswordHere', 'Amy', 'Taylor', 'DE', '1990-10-08');
+('john_doe', 'john@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'John', 'Doe', 'US', '1990-05-15'),
+('jane_smith', 'jane@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Jane', 'Smith', 'GB', '1992-08-22'),
+('mike_wilson', 'mike@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Mike', 'Wilson', 'CA', '1988-03-10'),
+('sarah_jones', 'sarah@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Sarah', 'Jones', 'AU', '1995-11-28'),
+('alex_brown', 'alex@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Alex', 'Brown', 'IN', '1993-07-04'),
+('emma_davis', 'emma@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Emma', 'Davis', 'US', '1991-12-18'),
+('chris_lee', 'chris@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Chris', 'Lee', 'SG', '1994-09-30'),
+('lisa_martin', 'lisa@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Lisa', 'Martin', 'FR', '1989-06-12'),
+('david_garcia', 'david@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'David', 'Garcia', 'ES', '1996-02-25'),
+('amy_taylor', 'amy@email.com', '$2b$10$6AtWjXy/NqMndHGSK72jZuD6pzM5UO7enO6Cwi3VQXtK7zq/b2/Sa', 'Amy', 'Taylor', 'DE', '1990-10-08');
 
 -- Insert User Subscriptions
 INSERT INTO UserSubscription (user_id, subscription_id, start_date, status) VALUES
