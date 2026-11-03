@@ -1,4 +1,4 @@
-"""``vamusic`` command line: migrate, seed, refresh and serve."""
+"""``vamusic`` command line: migrate, seed, refresh, serve and export the API schema."""
 
 from __future__ import annotations
 
@@ -96,6 +96,23 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def openapi_json() -> str:
+    """The API's OpenAPI document, formatted stably so the committed copy diffs cleanly."""
+    import json
+
+    from vamusic.api.app import create_app
+
+    return json.dumps(create_app().openapi(), indent=2, sort_keys=True) + "\n"
+
+
+def cmd_openapi(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    Path(args.out).write_text(openapi_json(), encoding="utf-8", newline="\n")
+    print(f"wrote {args.out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="vamusic", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -124,6 +141,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--reload", action="store_true")
     p.set_defaults(func=cmd_serve)
+
+    p = sub.add_parser("openapi", help="write the API's OpenAPI document for the docs site")
+    p.add_argument("--out", default="site/openapi.json")
+    p.set_defaults(func=cmd_openapi)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)
