@@ -129,6 +129,8 @@ export interface Play {
   ms_played: number;
   completed: boolean;
   device: string;
+  /** The monthly partition the play is stored in, e.g. vamusic.listening_event_2026_10. */
+  partition: string;
 }
 
 export interface Wrapped {

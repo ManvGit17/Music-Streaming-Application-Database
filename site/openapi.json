@@ -549,6 +549,35 @@
         "title": "Overview",
         "type": "object"
       },
+      "Payment": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "number"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_at": {
+            "format": "date-time",
+            "title": "Paid At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "method",
+          "status",
+          "paid_at"
+        ],
+        "title": "Payment",
+        "type": "object"
+      },
       "Play": {
         "properties": {
           "completed": {
@@ -562,6 +591,11 @@
           "ms_played": {
             "title": "Ms Played",
             "type": "integer"
+          },
+          "partition": {
+            "description": "The monthly partition the play is stored in",
+            "title": "Partition",
+            "type": "string"
           },
           "played_at": {
             "format": "date-time",
@@ -577,7 +611,8 @@
           "played_at",
           "ms_played",
           "completed",
-          "device"
+          "device",
+          "partition"
         ],
         "title": "Play",
         "type": "object"
@@ -1236,6 +1271,56 @@
           "role"
         ],
         "title": "Session",
+        "type": "object"
+      },
+      "Subscription": {
+        "properties": {
+          "ends": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/Payment"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "plan": {
+            "title": "Plan",
+            "type": "string"
+          },
+          "price": {
+            "title": "Price",
+            "type": "number"
+          },
+          "starts": {
+            "format": "date",
+            "title": "Starts",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan",
+          "price",
+          "starts",
+          "ends",
+          "status",
+          "payments"
+        ],
+        "title": "Subscription",
         "type": "object"
       },
       "Track": {
@@ -2314,6 +2399,32 @@
         "summary": "Recommendations",
         "tags": [
           "library"
+        ]
+      }
+    },
+    "/api/me/subscriptions": {
+      "get": {
+        "description": "The signed-in listener's subscription periods, newest first, with their payments.",
+        "operationId": "subscriptions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Subscription"
+                  },
+                  "title": "Response Subscriptions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Subscriptions",
+        "tags": [
+          "auth"
         ]
       }
     },

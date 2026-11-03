@@ -15,6 +15,7 @@ chosen. The SQL itself is in [`db/migrations/`](../db/migrations/), one numbered
 | `0008_audit` | JSONB change log |
 | `0009_cards` | `track_card` and `playlist_card`, display-ready views shared by the API and the web app |
 | `0010_centred_similarity` | centred cosine similarity and an HNSW expression index |
+| `0011_function_comments` | a `COMMENT ON` for every function, enforced by a test |
 
 ## Entity relationships
 

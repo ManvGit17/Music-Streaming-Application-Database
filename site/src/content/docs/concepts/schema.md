@@ -21,6 +21,7 @@ migrations are never edited.
 | `0008_audit` | The JSONB change log |
 | `0009_cards` | `track_card` and `playlist_card`, display-ready views |
 | `0010_centred_similarity` | Centred cosine similarity and its HNSW expression index |
+| `0011_function_comments` | A description for every function, enforced by a test |
 
 The [Schema Atlas](https://manvgit17.github.io/Music-Streaming-Application-Database/atlas) in
 the demo draws all of this live from the system catalogs.

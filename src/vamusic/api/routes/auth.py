@@ -77,6 +77,12 @@ def me(db: DbSession, _user: CurrentUser) -> Row:
     return row
 
 
+@router.get("/me/subscriptions", response_model=list[schemas.Subscription])
+def subscriptions(db: DbSession, _user: CurrentUser) -> list[Row]:
+    """The signed-in listener's subscription periods, newest first, with their payments."""
+    return db.q("auth.subscriptions")
+
+
 @router.patch("/me", response_model=schemas.Me)
 def update_me(body: schemas.ProfileIn, db: DbSession, _user: CurrentUser) -> Row:
     """Change the signed-in listener's display name or country."""
