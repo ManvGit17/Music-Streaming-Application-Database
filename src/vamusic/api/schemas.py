@@ -88,6 +88,8 @@ class Track(Model):
     plays: int
     likes: int
     liked: bool
+    #: Eight audio features in [0, 1]; the web app generates each track's music from them.
+    features: list[float] | None = None
 
 
 class ScoredTrack(Track):

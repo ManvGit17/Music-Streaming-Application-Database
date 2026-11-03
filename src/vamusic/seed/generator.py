@@ -24,7 +24,7 @@ from typing import Any, Literal
 
 from vamusic.seed import classic
 
-Scale = Literal["tiny", "demo", "full"]
+Scale = Literal["tiny", "web", "demo", "full"]
 Row = tuple[Any, ...]
 
 #: The last moment covered by generated listening history.
@@ -41,6 +41,8 @@ class ScaleSpec:
 
 SCALES: dict[Scale, ScaleSpec] = {
     "tiny": ScaleSpec(artists=30, users=60, events=6_000),
+    # Sized for the in-browser demo: loads into PGlite in a few seconds on first visit.
+    "web": ScaleSpec(artists=100, users=250, events=20_000),
     "demo": ScaleSpec(artists=120, users=400, events=60_000),
     "full": ScaleSpec(artists=220, users=5_000, events=1_000_000),
 }
@@ -377,9 +379,10 @@ def generate(scale: Scale = "demo", seed: int = 17) -> Dataset:
     for aid in range(len(classic.ARTISTS) + 1, spec.artists + 1):
         genre = rng.randint(1, len(genre_names))
         name = _unique(used_names, artist_name)
-        bio = f"{genre_names[genre - 1]} from {rng.choice(_COUNTRIES)}."
+        country = rng.choice(_COUNTRIES)
+        bio = f"{genre_names[genre - 1]} from {country}."
         hue = (GENRE_PROFILE[genre_names[genre - 1]][1] + rng.randint(-25, 25)) % 360
-        ds.artists.append((aid, name, bio, rng.choice(_COUNTRIES), rng.random() < 0.6, hue))
+        ds.artists.append((aid, name, bio, country, rng.random() < 0.6, hue))
         artist_genre[aid] = genre
         artist_center[aid] = _jitter(rng, centroids[genre], 0.06)
 
@@ -517,7 +520,7 @@ def generate(scale: Scale = "demo", seed: int = 17) -> Dataset:
             "listener",
             start + timedelta(days=rng.randint(0, 30)),
         )
-    add_user("admin", "admin@vamusic.dev", "VaMusic Admin", "IN", date(2000, 1, 1), "admin", start)
+    add_user("admin", "admin@vamusic.dev", "Admin", "IN", date(2000, 1, 1), "admin", start)
 
     def make_username() -> str:
         first, last = rng.choice(_FIRST).lower(), rng.choice(_LAST).lower()

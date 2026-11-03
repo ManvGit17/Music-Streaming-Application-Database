@@ -67,9 +67,6 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106", "S107", "S311", "S608"]
-# Route SQL is composed only from module-level constant fragments (TRACK_FIELDS, TRACK_JOINS);
-# every value that comes from a request is passed as a bind parameter.
-"src/vamusic/api/routes/*.py" = ["S608"]
 # Deterministic, seeded test data; never used for anything secret.
 "src/vamusic/seed/generator.py" = ["S311"]
 

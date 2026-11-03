@@ -63,11 +63,22 @@ def test_similar_tracks_use_the_hnsw_index(db):
     plan = "\n".join(
         r["QUERY PLAN"]
         for r in db.rows(
-            "EXPLAIN SELECT track_id FROM track "
-            "ORDER BY features <=> (SELECT features FROM track WHERE track_id = 1) LIMIT 5"
+            "EXPLAIN SELECT track_id FROM track ORDER BY centred(features)::vector(8) <=> "
+            "(SELECT centred(features)::vector(8) FROM track WHERE track_id = 1) LIMIT 5"
         )
     )
-    assert "track_features_hnsw" in plan
+    assert "track_features_centred_hnsw" in plan
+
+
+def test_centred_similarity_spreads_scores(db):
+    """Non-negative vectors can't point in opposite directions; centred ones can."""
+    row = db.rows(
+        "SELECT min(1 - (a.features <=> b.features)) AS raw, "
+        "min(1 - (centred(a.features) <=> centred(b.features))) AS centred "
+        "FROM track a, track b WHERE a.track_id = 1 AND b.track_id <> 1"
+    )[0]
+    assert row["raw"] >= 0  # raw cosine can never say "opposite"
+    assert row["centred"] < 0  # centred, opposite-sounding tracks point the other way
 
 
 def test_recommendations_skip_liked_and_recent_tracks(db):

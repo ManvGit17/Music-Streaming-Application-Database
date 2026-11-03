@@ -1,0 +1,6 @@
+node_modules
+dist
+public/seed
+test-results
+playwright-report
+*.tsbuildinfo

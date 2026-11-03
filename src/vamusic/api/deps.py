@@ -22,24 +22,41 @@ from psycopg_pool import ConnectionPool
 from vamusic.api import lens
 from vamusic.api.auth import Principal, read_token
 from vamusic.config import Settings
+from vamusic.db import queries
+
+#: A database row or a JSON object on its way to becoming a response model.
+Row = dict[str, Any]
 
 
 class Db:
-    """Thin query helper bound to one transaction, recording into the SQL Lens if enabled."""
+    """Query helper bound to one transaction, recording into the SQL Lens if enabled.
+
+    Routes run named queries from ``db/queries`` (the same files the web demo uses) with
+    ``q``/``q1``/``qv``. ``all`` runs raw SQL and is reserved for request setup.
+    """
 
     def __init__(self, conn: psycopg.Connection[Any], trace: lens.Trace | None) -> None:
         self.conn = conn
         self.trace = trace
 
-    def all(self, sql: str, params: Any = None) -> list[dict[str, Any]]:
+    def all(self, sql: str, params: Any = None) -> list[Row]:
         return lens.run(self.conn, self.trace, sql, params)
 
-    def one(self, sql: str, params: Any = None) -> dict[str, Any] | None:
-        rows = self.all(sql, params)
+    # The query name is positional-only so queries may have a parameter called "name".
+    def q(self, query_name: str, /, **params: Any) -> list[Row]:
+        query = queries.get(query_name)
+        missing = set(query.params) - params.keys()
+        if missing:
+            raise TypeError(f"{query_name} needs {sorted(missing)}")
+        values = {k: params[k] for k in query.params}
+        return lens.run(self.conn, self.trace, query.psycopg, values, name=query_name)
+
+    def q1(self, query_name: str, /, **params: Any) -> Row | None:
+        rows = self.q(query_name, **params)
         return rows[0] if rows else None
 
-    def value(self, sql: str, params: Any = None) -> Any:
-        row = self.one(sql, params)
+    def qv(self, query_name: str, /, **params: Any) -> Any:
+        row = self.q1(query_name, **params)
         return None if row is None else next(iter(row.values()))
 
 
