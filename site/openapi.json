@@ -1427,7 +1427,7 @@
     "/api/admin/artists/{artist_id}": {
       "patch": {
         "description": "Edit an artist. The change is written to the audit log by a trigger.",
-        "operationId": "update_artist_api_admin_artists__artist_id__patch",
+        "operationId": "update_artist",
         "parameters": [
           {
             "in": "path",
@@ -1481,7 +1481,7 @@
     "/api/admin/audit": {
       "get": {
         "description": "Recent audit-log entries, optionally for one table. Secrets are redacted.",
-        "operationId": "audit_api_admin_audit_get",
+        "operationId": "audit",
         "parameters": [
           {
             "in": "query",
@@ -1520,7 +1520,7 @@
                   "items": {
                     "$ref": "#/components/schemas/AuditEntry"
                   },
-                  "title": "Response Audit Api Admin Audit Get",
+                  "title": "Response Audit",
                   "type": "array"
                 }
               }
@@ -1547,7 +1547,7 @@
     "/api/admin/overview": {
       "get": {
         "description": "Catalog counts, this month's revenue, daily plays, top tracks and listening partitions.",
-        "operationId": "overview_api_admin_overview_get",
+        "operationId": "overview",
         "responses": {
           "200": {
             "content": {
@@ -1569,7 +1569,7 @@
     "/api/admin/refresh": {
       "post": {
         "description": "Refresh every materialized view concurrently; returns how long each took.",
-        "operationId": "refresh_api_admin_refresh_post",
+        "operationId": "refresh",
         "responses": {
           "200": {
             "content": {
@@ -1579,7 +1579,7 @@
                     "additionalProperties": true,
                     "type": "object"
                   },
-                  "title": "Response Refresh Api Admin Refresh Post",
+                  "title": "Response Refresh",
                   "type": "array"
                 }
               }
@@ -1596,7 +1596,7 @@
     "/api/albums/{album_id}": {
       "get": {
         "description": "One album with its tracks in order.",
-        "operationId": "get_album_api_albums__album_id__get",
+        "operationId": "get_album",
         "parameters": [
           {
             "in": "path",
@@ -1640,7 +1640,7 @@
     "/api/artists": {
       "get": {
         "description": "Artists ranked by monthly listeners.",
-        "operationId": "top_artists_api_artists_get",
+        "operationId": "top_artists",
         "parameters": [
           {
             "in": "query",
@@ -1663,7 +1663,7 @@
                   "items": {
                     "$ref": "#/components/schemas/Artist"
                   },
-                  "title": "Response Top Artists Api Artists Get",
+                  "title": "Response Top Artists",
                   "type": "array"
                 }
               }
@@ -1690,7 +1690,7 @@
     "/api/artists/{artist_id}": {
       "get": {
         "description": "One artist with albums, top tracks and monthly listeners.",
-        "operationId": "get_artist_api_artists__artist_id__get",
+        "operationId": "get_artist",
         "parameters": [
           {
             "in": "path",
@@ -1733,8 +1733,8 @@
     },
     "/api/auth/login": {
       "post": {
-        "description": "Check a username and password with bcrypt inside the database and return a session token.",
-        "operationId": "login_api_auth_login_post",
+        "description": "Look up the account through a `SECURITY DEFINER` function and check its bcrypt hash.",
+        "operationId": "login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1776,7 +1776,7 @@
     "/api/auth/register": {
       "post": {
         "description": "Create a listener account through a `SECURITY DEFINER` function; returns a session token.",
-        "operationId": "register_api_auth_register_post",
+        "operationId": "register",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1818,7 +1818,7 @@
     "/api/genres": {
       "get": {
         "description": "Every genre with its track count.",
-        "operationId": "genres_api_genres_get",
+        "operationId": "genres",
         "responses": {
           "200": {
             "content": {
@@ -1827,7 +1827,7 @@
                   "items": {
                     "$ref": "#/components/schemas/Genre"
                   },
-                  "title": "Response Genres Api Genres Get",
+                  "title": "Response Genres",
                   "type": "array"
                 }
               }
@@ -1844,14 +1844,14 @@
     "/api/health": {
       "get": {
         "description": "Liveness check with the API version, the PostgreSQL version and the request role.",
-        "operationId": "health_api_health_get",
+        "operationId": "health",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Health Api Health Get",
+                  "title": "Response Health",
                   "type": "object"
                 }
               }
@@ -1868,7 +1868,7 @@
     "/api/me": {
       "get": {
         "description": "The signed-in listener's profile, tier, plan and listening totals.",
-        "operationId": "me_api_me_get",
+        "operationId": "me",
         "responses": {
           "200": {
             "content": {
@@ -1888,7 +1888,7 @@
       },
       "patch": {
         "description": "Change the signed-in listener's display name or country.",
-        "operationId": "update_me_api_me_patch",
+        "operationId": "update_me",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1930,7 +1930,7 @@
     "/api/me/follows": {
       "get": {
         "description": "Artists the signed-in listener follows.",
-        "operationId": "follows_api_me_follows_get",
+        "operationId": "follows",
         "responses": {
           "200": {
             "content": {
@@ -1939,7 +1939,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ArtistRef"
                   },
-                  "title": "Response Follows Api Me Follows Get",
+                  "title": "Response Follows",
                   "type": "array"
                 }
               }
@@ -1956,7 +1956,7 @@
     "/api/me/follows/{artist_id}": {
       "delete": {
         "description": "Unfollow an artist. Idempotent.",
-        "operationId": "unfollow_api_me_follows__artist_id__delete",
+        "operationId": "unfollow",
         "parameters": [
           {
             "in": "path",
@@ -1991,7 +1991,7 @@
       },
       "put": {
         "description": "Follow an artist. Idempotent.",
-        "operationId": "follow_api_me_follows__artist_id__put",
+        "operationId": "follow",
         "parameters": [
           {
             "in": "path",
@@ -2028,7 +2028,7 @@
     "/api/me/history": {
       "get": {
         "description": "The signed-in listener's recent plays from the partitioned event store.",
-        "operationId": "history_api_me_history_get",
+        "operationId": "history",
         "parameters": [
           {
             "in": "query",
@@ -2051,7 +2051,7 @@
                   "items": {
                     "$ref": "#/components/schemas/Play"
                   },
-                  "title": "Response History Api Me History Get",
+                  "title": "Response History",
                   "type": "array"
                 }
               }
@@ -2078,7 +2078,7 @@
     "/api/me/likes": {
       "get": {
         "description": "Tracks the signed-in listener liked, newest first. Row-level security limits this to their\nown rows.",
-        "operationId": "likes_api_me_likes_get",
+        "operationId": "likes",
         "parameters": [
           {
             "in": "query",
@@ -2101,7 +2101,7 @@
                   "items": {
                     "$ref": "#/components/schemas/Track"
                   },
-                  "title": "Response Likes Api Me Likes Get",
+                  "title": "Response Likes",
                   "type": "array"
                 }
               }
@@ -2128,7 +2128,7 @@
     "/api/me/likes/{track_id}": {
       "delete": {
         "description": "Remove a like. Idempotent.",
-        "operationId": "unlike_api_me_likes__track_id__delete",
+        "operationId": "unlike",
         "parameters": [
           {
             "in": "path",
@@ -2163,7 +2163,7 @@
       },
       "put": {
         "description": "Like a track. Idempotent.",
-        "operationId": "like_api_me_likes__track_id__put",
+        "operationId": "like",
         "parameters": [
           {
             "in": "path",
@@ -2200,7 +2200,7 @@
     "/api/me/playlists": {
       "get": {
         "description": "Playlists the signed-in listener owns, most recently changed first.",
-        "operationId": "my_playlists_api_me_playlists_get",
+        "operationId": "my_playlists",
         "responses": {
           "200": {
             "content": {
@@ -2209,7 +2209,7 @@
                   "items": {
                     "$ref": "#/components/schemas/PlaylistSummary"
                   },
-                  "title": "Response My Playlists Api Me Playlists Get",
+                  "title": "Response My Playlists",
                   "type": "array"
                 }
               }
@@ -2226,7 +2226,7 @@
     "/api/me/plays": {
       "post": {
         "description": "Record a listen. Counters update in the same statement via statement-level triggers.",
-        "operationId": "record_play_api_me_plays_post",
+        "operationId": "record_play",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2243,7 +2243,7 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Record Play Api Me Plays Post",
+                  "title": "Response Record Play",
                   "type": "object"
                 }
               }
@@ -2270,7 +2270,7 @@
     "/api/me/recommendations": {
       "get": {
         "description": "Tracks near the listener's taste vector (the average of liked and recently played tracks),\nskipping ones they already know. Falls back to trending for new listeners.",
-        "operationId": "recommendations_api_me_recommendations_get",
+        "operationId": "recommendations",
         "parameters": [
           {
             "in": "query",
@@ -2293,7 +2293,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ScoredTrack"
                   },
-                  "title": "Response Recommendations Api Me Recommendations Get",
+                  "title": "Response Recommendations",
                   "type": "array"
                 }
               }
@@ -2320,7 +2320,7 @@
     "/api/me/wrapped": {
       "get": {
         "description": "A year in review computed by one SQL function: totals, top artists and tracks, streaks and\npercentile.",
-        "operationId": "wrapped_api_me_wrapped_get",
+        "operationId": "wrapped",
         "parameters": [
           {
             "in": "query",
@@ -2341,7 +2341,7 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Wrapped Api Me Wrapped Get",
+                  "title": "Response Wrapped",
                   "type": "object"
                 }
               }
@@ -2368,7 +2368,7 @@
     "/api/playlists": {
       "get": {
         "description": "Public playlists, most followed first.",
-        "operationId": "public_playlists_api_playlists_get",
+        "operationId": "public_playlists",
         "parameters": [
           {
             "in": "query",
@@ -2391,7 +2391,7 @@
                   "items": {
                     "$ref": "#/components/schemas/PlaylistSummary"
                   },
-                  "title": "Response Public Playlists Api Playlists Get",
+                  "title": "Response Public Playlists",
                   "type": "array"
                 }
               }
@@ -2416,7 +2416,7 @@
       },
       "post": {
         "description": "Create a playlist owned by the signed-in listener.",
-        "operationId": "create_playlist_api_playlists_post",
+        "operationId": "create_playlist",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2458,7 +2458,7 @@
     "/api/playlists/{playlist_id}": {
       "delete": {
         "description": "Delete a playlist. Owner only.",
-        "operationId": "delete_playlist_api_playlists__playlist_id__delete",
+        "operationId": "delete_playlist",
         "parameters": [
           {
             "in": "path",
@@ -2493,7 +2493,7 @@
       },
       "get": {
         "description": "One playlist with its tracks. Private playlists are visible only to their owner.",
-        "operationId": "get_playlist_api_playlists__playlist_id__get",
+        "operationId": "get_playlist",
         "parameters": [
           {
             "in": "path",
@@ -2535,7 +2535,7 @@
       },
       "patch": {
         "description": "Rename a playlist, change its description or make it public or private. Owner only.",
-        "operationId": "update_playlist_api_playlists__playlist_id__patch",
+        "operationId": "update_playlist",
         "parameters": [
           {
             "in": "path",
@@ -2589,7 +2589,7 @@
     "/api/playlists/{playlist_id}/follow": {
       "delete": {
         "description": "Stop following a playlist. Idempotent.",
-        "operationId": "unfollow_playlist_api_playlists__playlist_id__follow_delete",
+        "operationId": "unfollow_playlist",
         "parameters": [
           {
             "in": "path",
@@ -2624,7 +2624,7 @@
       },
       "put": {
         "description": "Follow someone else's public playlist. Idempotent.",
-        "operationId": "follow_playlist_api_playlists__playlist_id__follow_put",
+        "operationId": "follow_playlist",
         "parameters": [
           {
             "in": "path",
@@ -2661,7 +2661,7 @@
     "/api/playlists/{playlist_id}/order": {
       "put": {
         "description": "Set the order of every track in one statement, using a deferrable unique constraint. Owner\nonly.",
-        "operationId": "reorder_api_playlists__playlist_id__order_put",
+        "operationId": "reorder",
         "parameters": [
           {
             "in": "path",
@@ -2715,7 +2715,7 @@
     "/api/playlists/{playlist_id}/tracks": {
       "post": {
         "description": "Append a track to a playlist. Owner only.",
-        "operationId": "add_track_api_playlists__playlist_id__tracks_post",
+        "operationId": "add_track",
         "parameters": [
           {
             "in": "path",
@@ -2769,7 +2769,7 @@
     "/api/playlists/{playlist_id}/tracks/{track_id}": {
       "delete": {
         "description": "Remove a track from a playlist and close the gap in positions. Owner only.",
-        "operationId": "remove_track_api_playlists__playlist_id__tracks__track_id__delete",
+        "operationId": "remove_track",
         "parameters": [
           {
             "in": "path",
@@ -2823,14 +2823,14 @@
     "/api/schema": {
       "get": {
         "description": "Tables, columns, keys and policies, read live from the system catalogs.",
-        "operationId": "schema_api_schema_get",
+        "operationId": "schema",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Schema Api Schema Get",
+                  "title": "Response Schema",
                   "type": "object"
                 }
               }
@@ -2847,7 +2847,7 @@
     "/api/search": {
       "get": {
         "description": "Hybrid search: prefix full-text and strict trigram rankings fused with Reciprocal Rank\nFusion. Each hit includes both ranks.",
-        "operationId": "search_api_search_get",
+        "operationId": "search",
         "parameters": [
           {
             "in": "query",
@@ -2881,7 +2881,7 @@
                   "items": {
                     "$ref": "#/components/schemas/SearchHit"
                   },
-                  "title": "Response Search Api Search Get",
+                  "title": "Response Search",
                   "type": "array"
                 }
               }
@@ -2908,7 +2908,7 @@
     "/api/tracks/{track_id}": {
       "get": {
         "description": "One track with its artists, album and audio features.",
-        "operationId": "get_track_api_tracks__track_id__get",
+        "operationId": "get_track",
         "parameters": [
           {
             "in": "path",
@@ -2952,7 +2952,7 @@
     "/api/tracks/{track_id}/similar": {
       "get": {
         "description": "Tracks that sound alike: nearest neighbours by centred cosine similarity through an HNSW\nindex.",
-        "operationId": "similar_api_tracks__track_id__similar_get",
+        "operationId": "similar",
         "parameters": [
           {
             "in": "path",
@@ -2985,7 +2985,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ScoredTrack"
                   },
-                  "title": "Response Similar Api Tracks  Track Id  Similar Get",
+                  "title": "Response Similar",
                   "type": "array"
                 }
               }
@@ -3012,7 +3012,7 @@
     "/api/trending": {
       "get": {
         "description": "Tracks ranked by time-decayed plays, listeners and likes, from a materialized view.",
-        "operationId": "trending_api_trending_get",
+        "operationId": "trending",
         "parameters": [
           {
             "in": "query",
@@ -3051,7 +3051,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ScoredTrack"
                   },
-                  "title": "Response Trending Api Trending Get",
+                  "title": "Response Trending",
                   "type": "array"
                 }
               }
@@ -3075,5 +3075,11 @@
         ]
       }
     }
-  }
+  },
+  "servers": [
+    {
+      "description": "docker compose up",
+      "url": "http://localhost:8000"
+    }
+  ]
 }

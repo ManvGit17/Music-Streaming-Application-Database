@@ -102,7 +102,10 @@ def openapi_json() -> str:
 
     from vamusic.api.app import create_app
 
-    return json.dumps(create_app().openapi(), indent=2, sort_keys=True) + "\n"
+    document = create_app().openapi()
+    # The reference's request examples target the Compose stack.
+    document["servers"] = [{"url": "http://localhost:8000", "description": "docker compose up"}]
+    return json.dumps(document, indent=2, sort_keys=True) + "\n"
 
 
 def cmd_openapi(args: argparse.Namespace) -> int:
