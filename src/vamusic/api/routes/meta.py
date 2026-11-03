@@ -13,6 +13,7 @@ router = APIRouter(prefix="/api", tags=["meta"], route_class=LensRoute)
 
 @router.get("/health")
 def health(db: DbSession) -> Row:
+    """Liveness check with the API version, the PostgreSQL version and the request role."""
     row = db.q1("meta.health")
     assert row is not None
     return {"status": "ok", "version": __version__, **row}

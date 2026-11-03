@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"], route_class=LensRoute)
 
 @router.get("/overview", response_model=schemas.Overview)
 def overview(db: DbSession, _admin: AdminUser) -> Row:
+    """Catalog counts, this month's revenue, daily plays, top tracks and listening partitions."""
     counts = db.q1("admin.counts")
     assert counts is not None
     return {
@@ -34,6 +35,7 @@ def audit(
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
     table: str | None = None,
 ) -> list[Row]:
+    """Recent audit-log entries, optionally for one table. Secrets are redacted."""
     return db.q("admin.audit", table=table, limit=limit)
 
 
@@ -47,6 +49,7 @@ def refresh(db: DbSession, _admin: AdminUser) -> list[Row]:
 def update_artist(
     artist_id: UUID, body: schemas.ArtistPatch, db: DbSession, _admin: AdminUser
 ) -> Row:
+    """Edit an artist. The change is written to the audit log by a trigger."""
     changes = body.model_dump(exclude_unset=True)
     row = db.q1(
         "admin.update_artist",

@@ -1,0 +1,52 @@
+---
+title: VaMusic
+description: A music streaming app built database-first on PostgreSQL 18, with the SQL behind every screen on show.
+template: splash
+hero:
+  tagline: A music streaming app built database-first on PostgreSQL 18. Open any screen and see the exact SQL, plans and triggers behind it.
+  actions:
+    - text: Get started
+      link: start/introduction/
+      icon: right-arrow
+    - text: Open the live demo
+      link: https://manvgit17.github.io/Music-Streaming-Application-Database/
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <Card title="Runs in your browser" icon="rocket">
+    The demo runs the real PostgreSQL 18, compiled to WebAssembly, with the same migrations and
+    SQL files as the server. Nothing to install.
+  </Card>
+  <Card title="SQL on show" icon="magnifier">
+    The SQL Lens shows every statement a screen ran, with parameters, timings, the plan tree and
+    the triggers that fired. The API returns the same with `?lens=plan`.
+  </Card>
+  <Card title="Built for real load" icon="setting">
+    A monthly-partitioned event store, counters kept by statement-level triggers, and
+    materialized views refreshed concurrently.
+  </Card>
+  <Card title="Security in the database" icon="approve-check">
+    Least-privilege roles, row-level security on every per-listener table, pinned
+    `search_path`s and a JSONB audit log.
+  </Card>
+  <Card title="Search that forgives" icon="pencil">
+    Prefix full-text and strict trigram rankings fused with Reciprocal Rank Fusion:
+    `midnite tran` finds "Midnight Train".
+  </Card>
+  <Card title="Sounds like this" icon="star">
+    Recommendations from audio-feature vectors through a pgvector HNSW index.
+  </Card>
+</CardGrid>
+
+## Where to go next
+
+<CardGrid>
+  <LinkCard title="Quick start" description="Run it in the browser, with Docker or from source." href="start/quick-start/" />
+  <LinkCard title="Architecture" description="How a request flows from the UI to PostgreSQL and back." href="concepts/architecture/" />
+  <LinkCard title="Using the SQL Lens" description="Read plans and triggers for any screen or API call." href="guides/sql-lens/" />
+  <LinkCard title="API reference" description="Every endpoint, generated from the OpenAPI schema." href="api/" />
+</CardGrid>

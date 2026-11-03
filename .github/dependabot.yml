@@ -28,3 +28,11 @@ updates:
     groups:
       web:
         patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+    groups:
+      docs:
+        patterns: ["*"]

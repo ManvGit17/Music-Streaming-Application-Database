@@ -1,7 +1,8 @@
 name: Demo site
 
-# Builds the web app in browser mode (PostgreSQL runs in the visitor's tab) and publishes it to
-# GitHub Pages. Requires Settings → Pages → Source: GitHub Actions.
+# Builds the web app in browser mode (PostgreSQL runs in the visitor's tab) and the docs site,
+# and publishes both to GitHub Pages, the docs under /docs/. Requires Settings → Pages → Source:
+# GitHub Actions.
 
 on:
   push:
@@ -29,7 +30,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            site/package-lock.json
       - run: uv sync --locked && uv run vamusic export --scale web --out web/public/seed
       - run: npm ci
         working-directory: web
@@ -37,6 +40,11 @@ jobs:
         working-directory: web
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+      - run: npm ci && npm run build
+        working-directory: site
+        env:
+          DOCS_BASE: /${{ github.event.repository.name }}/docs
+      - run: cp -r site/dist web/dist/docs
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
