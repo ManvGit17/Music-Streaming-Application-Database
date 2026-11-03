@@ -9,35 +9,41 @@ def first_track(client, q="Northern Lights"):
 
 def test_like_round_trip(client, newbie):
     track = first_track(client)
-    assert client.put(f"/api/me/likes/{track['id']}", headers=newbie).status_code == 204
-    assert (
-        client.put(f"/api/me/likes/{track['id']}", headers=newbie).status_code == 204
-    )  # idempotent
+    url = f"/api/me/likes/{track['id']}"
+    for _ in range(2):  # liking twice is idempotent
+        res = client.put(url, headers=newbie)
+        assert res.status_code == 204
     detail = client.get(f"/api/tracks/{track['id']}", headers=newbie).json()
     assert detail["liked"] is True
     assert detail["likes"] == track["likes"] + 1
     assert [t["id"] for t in client.get("/api/me/likes", headers=newbie).json()] == [track["id"]]
-    assert client.delete(f"/api/me/likes/{track['id']}", headers=newbie).status_code == 204
+    res = client.delete(url, headers=newbie)
+    assert res.status_code == 204
     assert client.get("/api/me/likes", headers=newbie).json() == []
 
 
 def test_likes_are_private(client, newbie, john):
     track = first_track(client, "City Dreams")
-    client.put(f"/api/me/likes/{track['id']}", headers=newbie)
-    johns = {t["id"] for t in client.get("/api/me/likes", headers=john).json()}
-    assert (
-        track["id"] not in johns
-        or client.get(f"/api/tracks/{track['id']}", headers=john).json()["liked"]
-    )
+    path = f"/api/tracks/{track['id']}"
+    johns_before = client.get(path, headers=john).json()["liked"]
+    res = client.put(f"/api/me/likes/{track['id']}", headers=newbie)
+    assert res.status_code == 204
+    # Someone else's like changes the public total, never another listener's "liked" flag.
+    assert client.get(path, headers=john).json()["liked"] is johns_before
+    assert client.get(path).json()["liked"] is False
+    assert client.get(path).json()["likes"] == track["likes"] + 1
 
 
 def test_follow_artist(client, newbie):
     artist = client.get("/api/artists", params={"limit": 1}).json()[0]
-    assert client.put(f"/api/me/follows/{artist['id']}", headers=newbie).status_code == 204
+    url = f"/api/me/follows/{artist['id']}"
+    res = client.put(url, headers=newbie)
+    assert res.status_code == 204
     page = client.get(f"/api/artists/{artist['id']}", headers=newbie).json()
     assert page["following"] is True
     assert page["followers"] == artist["followers"] + 1
-    assert client.delete(f"/api/me/follows/{artist['id']}", headers=newbie).status_code == 204
+    res = client.delete(url, headers=newbie)
+    assert res.status_code == 204
 
 
 def test_recording_a_play(client, newbie):

@@ -73,12 +73,10 @@ def explain(
     conn: psycopg.Connection[Any], sql: str, params: Any
 ) -> tuple[Any, list[dict[str, Any]], float, float]:
     """Run EXPLAIN ANALYZE in a savepoint that is always rolled back."""
-    row: dict[str, Any] | None = None
-    with conn.transaction():
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {sql}".encode(), params)
-            row = cur.fetchone()
-        raise psycopg.Rollback()  # undo whatever the analysed statement changed
+    # force_rollback undoes whatever the analysed statement changed.
+    with conn.transaction(force_rollback=True), conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {sql}".encode(), params)
+        row = cur.fetchone()
     assert row is not None
     doc = row["QUERY PLAN"][0]
     triggers = [

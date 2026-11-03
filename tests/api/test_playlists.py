@@ -58,20 +58,15 @@ def test_reorder_must_list_every_track(client, newbie, playlist, tracks):
 
 
 def test_others_can_read_but_not_change(client, newbie, john, playlist, tracks):
-    assert client.get(f"/api/playlists/{playlist}", headers=john).json()["is_owner"] is False
-    assert (
-        client.patch(
-            f"/api/playlists/{playlist}", headers=john, json={"name": "mine now"}
-        ).status_code
-        == 403
-    )
-    assert (
-        client.post(
-            f"/api/playlists/{playlist}/tracks", headers=john, json={"track_id": tracks[0]}
-        ).status_code
-        == 403
-    )
-    assert client.delete(f"/api/playlists/{playlist}", headers=john).status_code == 403
+    url = f"/api/playlists/{playlist}"
+    assert client.get(url, headers=john).json()["is_owner"] is False
+    attempts = [
+        client.patch(url, headers=john, json={"name": "mine now"}),
+        client.post(f"{url}/tracks", headers=john, json={"track_id": tracks[0]}),
+        client.delete(url, headers=john),
+    ]
+    assert [r.status_code for r in attempts] == [403, 403, 403]
+    assert client.get(url, headers=newbie).json()["name"] == "Road Trip"
 
 
 def test_private_playlists_are_invisible(client, newbie, john, playlist):
@@ -82,10 +77,13 @@ def test_private_playlists_are_invisible(client, newbie, john, playlist):
 
 
 def test_follow_and_delete(client, newbie, john, playlist):
-    assert client.put(f"/api/playlists/{playlist}/follow", headers=john).status_code == 204
-    assert client.get(f"/api/playlists/{playlist}").json()["followers"] == 1
-    assert client.delete(f"/api/playlists/{playlist}", headers=newbie).status_code == 204
-    assert client.get(f"/api/playlists/{playlist}", headers=newbie).status_code == 404
+    url = f"/api/playlists/{playlist}"
+    res = client.put(f"{url}/follow", headers=john)
+    assert res.status_code == 204
+    assert client.get(url).json()["followers"] == 1
+    res = client.delete(url, headers=newbie)
+    assert res.status_code == 204
+    assert client.get(url, headers=newbie).status_code == 404
 
 
 def test_my_playlists(client, newbie, playlist):
