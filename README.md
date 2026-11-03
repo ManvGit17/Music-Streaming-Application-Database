@@ -74,7 +74,7 @@ install, no server, no account.
 | **Security in the database** | Least-privilege roles, row-level security on every per-listener table, `SECURITY DEFINER` functions with a pinned `search_path`, and a JSONB audit log that redacts secrets. |
 | **PostgreSQL 18** | `uuidv7()` public ids, a virtual generated column, exclusion constraints over date ranges, deferrable constraints. |
 | **One set of queries** | Every query lives in [`db/queries/`](db/queries/) and is run unchanged by the FastAPI server and by the in-browser database. |
-| **Tested for real** | 173 tests against PostgreSQL 18 in containers, including attempts to read and write another listener's data that must fail; Playwright and axe-core tests for the web app. |
+| **Tested for real** | 175 tests against PostgreSQL 18 in containers, including attempts to read and write another listener's data that must fail; Playwright and axe-core tests for the web app. |
 
 The reasoning behind each choice is in [docs/database.md](docs/database.md).
 
@@ -129,7 +129,7 @@ database carries an application.
 | Row-level security | — | — | — | ✓ |
 | Audit log | — | — | — | ✓ JSONB |
 | Data | Fixed sample | Fixed sample | Hand-written rows | Seeded generator, up to 1M plays |
-| Automated tests | — | — | — | 173 + browser tests |
+| Automated tests | — | — | — | 175 + browser tests |
 
 ## Repository layout
 

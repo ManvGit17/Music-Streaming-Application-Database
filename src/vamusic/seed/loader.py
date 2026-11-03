@@ -175,8 +175,12 @@ def export(ds: Dataset, out_dir: Path) -> dict[str, object]:
     return manifest
 
 
-def load(conn: psycopg.Connection, ds: Dataset) -> LoadReport:
-    """Load ``ds`` into an empty database in one transaction."""
+def load(conn: psycopg.Connection, ds: Dataset, *, summarize: bool = True) -> LoadReport:
+    """Load ``ds`` into an empty database in one transaction.
+
+    ``summarize=False`` leaves the BRIN index on play time unsummarized, as it is straight after
+    a bulk load; only the BRIN benchmark wants that.
+    """
     if conn.execute("SELECT EXISTS (SELECT 1 FROM vamusic.track)").fetchone() == (True,):
         raise AlreadySeeded("the catalog already has data; seed into a fresh database")
 
@@ -217,6 +221,9 @@ def load(conn: psycopg.Connection, ds: Dataset) -> LoadReport:
 
     t0 = time.perf_counter()
     conn.execute("SELECT * FROM vamusic.refresh_analytics()")
+    if summarize:
+        # The BRIN index predates the load, so the loaded block ranges have no summaries yet.
+        conn.execute("SELECT vamusic.summarize_listening_events()")
     conn.commit()
     report.seconds["refresh_analytics"] = round(time.perf_counter() - t0, 3)
 

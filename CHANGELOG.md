@@ -13,6 +13,25 @@ All notable changes to this project are documented here. The format follows
 - `GET /api/me/subscriptions` returns a listener's subscription periods and payments (#14).
 - Migration 0011 gives every function a `COMMENT ON`, enforced by a test (#15).
 - A test for trending's three-day half-life (#13).
+- A search that finds nothing suggests popular tracks (#10).
+- Copy any statement from the SQL Lens, with its parameters as comments (#11).
+- Plan nodes in the SQL Lens explain what they do on hover or focus (#12).
+- A **Copy link** button on public playlists (#16).
+- The top bar shows the database role requests run as (#18).
+- The FAQ backs its answers with commands you can run against the Compose stack (#17).
+- `scripts/bench_brin.py` compares the BRIN index on play time with a B-tree (#19).
+
+### Changed
+
+- Page sections are regions named by their heading, for screen-reader navigation.
+
+### Fixed
+
+- `generate('full')` failed with "ran out of unique names"; repeated titles are now numbered.
+- Freshly seeded databases, including the browser demo, never summarized the BRIN index on play
+  time, so it read every block. Migration 0012 adds `summarize_listening_events()`, which runs
+  after each bulk load.
+- The play-history end-to-end test no longer fails on a busy machine.
 
 ## [2.0.0] - 2026-11-03
 
