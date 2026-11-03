@@ -16,7 +16,7 @@ Written on 2026-11-03.
 | Search | `LIKE '%term%'` | Full text and trigrams fused with Reciprocal Rank Fusion |
 | Recommendations | Top genres | pgvector HNSW over audio-feature vectors |
 | Security | Hard-coded DB password, no admin sign-in | Roles, row-level security, definer functions, audit log |
-| Tests | None | 168 Python tests on real databases, Playwright and axe-core |
+| Tests | None | 173 Python tests on real databases, Playwright and axe-core |
 | CI | None | Lint, types, tests, legacy, Compose smoke test, web, docs, audit, CodeQL |
 | Docs | A course report | README, docs site with API reference, design notes, contributing guides |
 | License | None | MIT |
