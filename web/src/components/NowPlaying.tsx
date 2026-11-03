@@ -32,6 +32,11 @@ export function NowPlaying({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-bg" />
         <Dialog.Content
           aria-describedby={undefined}
+          // Focus the view itself, not the close button, so its tooltip does not pop up on open.
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).focus();
+          }}
           className="fixed inset-0 z-50 overflow-y-auto outline-none"
         >
           <div
