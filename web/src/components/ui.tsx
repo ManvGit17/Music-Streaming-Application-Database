@@ -1,6 +1,6 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { type ButtonHTMLAttributes, forwardRef, type ReactNode } from "react";
+import { type ButtonHTMLAttributes, forwardRef, type ReactNode, useId } from "react";
 import { cn } from "@/lib/util";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -147,12 +147,15 @@ export function Section({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  const id = useId();
   return (
-    <section className="flex flex-col gap-4">
+    <section aria-labelledby={id} className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-4">
         <div>
           {eyebrow ? <p className="eyebrow mb-1">{eyebrow}</p> : null}
-          <h2 className="text-2xl md:text-[1.75rem]">{title}</h2>
+          <h2 id={id} className="text-2xl md:text-[1.75rem]">
+            {title}
+          </h2>
         </div>
         {action}
       </div>

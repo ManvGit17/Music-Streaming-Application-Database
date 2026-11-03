@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useQueryClient } from "@tanstack/react-query";
-import { Globe, GripVertical, Lock, Pause, Play, Search, Trash2, X } from "lucide-react";
+import { Globe, GripVertical, Link2, Lock, Pause, Play, Search, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -222,6 +222,15 @@ export default function PlaylistPage() {
     }
   };
 
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied: anyone can open this public playlist");
+    } catch {
+      toast.error("Couldn't reach the clipboard");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8 pt-6">
       <CollectionHeader
@@ -252,6 +261,11 @@ export default function PlaylistPage() {
               )}
               {playingHere && player.playing ? "Pause" : "Play"}
             </Button>
+            {p.is_public ? (
+              <Button variant="ghost" onClick={() => void copyLink()}>
+                <Link2 className="size-4" aria-hidden /> Copy link
+              </Button>
+            ) : null}
             {p.is_owner ? (
               <>
                 <Button
