@@ -42,6 +42,11 @@ def test_migrate_seed_refresh(fresh_db, capsys):
     assert cli.main(["refresh"]) == 0
     assert "trending_track" in capsys.readouterr().out
 
+    assert cli.main(["partitions"]) == 0
+    out = capsys.readouterr().out
+    assert "listening_event_" in out
+    assert out.strip().splitlines()[-1].endswith("rows")
+
     with psycopg.connect(fresh_db) as conn:
         assert conn.execute("SELECT count(*) FROM vamusic.track").fetchone()[0] > 100
 
