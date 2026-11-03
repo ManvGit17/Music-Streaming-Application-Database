@@ -10,7 +10,6 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: ["--maxkb=1024"]
-        exclude: ^legacy/VAMusic_Report\.docx$
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

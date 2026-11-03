@@ -14,7 +14,6 @@ The modern version of the project lives in the repository root and runs on Postg
 | `tkinter/vamusic_admin_ui.py` | Admin app: CRUD and schema import |
 | `tkinter/db_utils.py` | Shared connection and password helpers |
 | `tkinter/sql_script.py` | `DELIMITER`-aware MySQL script splitter used by Import SQL |
-| `VAMusic_Report.docx` | The course report |
 
 ## Running it
 
