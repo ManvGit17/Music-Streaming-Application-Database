@@ -4,6 +4,8 @@ version = "2.0.0.dev0"
 description = "A database-first music streaming platform on PostgreSQL 18."
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "Manit V Urs" },
     { name = "Lohith Anand" },
