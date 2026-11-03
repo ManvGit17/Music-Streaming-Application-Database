@@ -49,3 +49,8 @@ def test_no_duplicate_relationships():
     assert len({(u, t) for u, t, _ in ds.likes}) == len(ds.likes)
     assert len(set(ds.user_follows)) == len(ds.user_follows)
     assert len({(p, t) for p, t, *_ in ds.playlist_tracks}) == len(ds.playlist_tracks)
+
+
+def test_artist_bio_matches_country():
+    for _aid, _name, bio, country, *_ in generate("tiny").artists[10:]:
+        assert bio.endswith(f"from {country}.")
