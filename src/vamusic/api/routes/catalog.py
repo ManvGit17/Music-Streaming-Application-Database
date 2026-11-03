@@ -18,6 +18,7 @@ Limit = Annotated[int, Query(ge=1, le=100)]
 
 @router.get("/genres", response_model=list[schemas.Genre])
 def genres(db: DbSession) -> list[Row]:
+    """Every genre with its track count."""
     return db.q("catalog.genres")
 
 
@@ -25,6 +26,9 @@ def genres(db: DbSession) -> list[Row]:
 def search(
     db: DbSession, q: Annotated[str, Query(min_length=1, max_length=200)], limit: Limit = 20
 ) -> list[Row]:
+    """Hybrid search: prefix full-text and strict trigram rankings fused with Reciprocal Rank
+    Fusion. Each hit includes both ranks.
+    """
     return db.q("catalog.search", q=q, limit=limit)
 
 
@@ -32,11 +36,13 @@ def search(
 def trending(
     db: DbSession, limit: Limit = 20, genre: Annotated[int | None, Query()] = None
 ) -> list[Row]:
+    """Tracks ranked by time-decayed plays, listeners and likes, from a materialized view."""
     return db.q("catalog.trending", genre=genre, limit=limit)
 
 
 @router.get("/tracks/{track_id}", response_model=schemas.Track)
 def get_track(track_id: UUID, db: DbSession) -> Row:
+    """One track with its artists, album and audio features."""
     row = db.q1("catalog.track", id=track_id)
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "track not found")
@@ -45,16 +51,21 @@ def get_track(track_id: UUID, db: DbSession) -> Row:
 
 @router.get("/tracks/{track_id}/similar", response_model=list[schemas.ScoredTrack])
 def similar(track_id: UUID, db: DbSession, limit: Limit = 12) -> list[Row]:
+    """Tracks that sound alike: nearest neighbours by centred cosine similarity through an HNSW
+    index.
+    """
     return db.q("catalog.similar", id=track_id, limit=limit)
 
 
 @router.get("/artists", response_model=list[schemas.Artist])
 def top_artists(db: DbSession, limit: Limit = 20) -> list[Row]:
+    """Artists ranked by monthly listeners."""
     return db.q("catalog.top_artists", limit=limit)
 
 
 @router.get("/artists/{artist_id}", response_model=schemas.Artist)
 def get_artist(artist_id: UUID, db: DbSession) -> Row:
+    """One artist with albums, top tracks and monthly listeners."""
     artist = db.q1("catalog.artist", id=artist_id)
     if artist is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "artist not found")
@@ -65,6 +76,7 @@ def get_artist(artist_id: UUID, db: DbSession) -> Row:
 
 @router.get("/albums/{album_id}", response_model=schemas.Album)
 def get_album(album_id: UUID, db: DbSession) -> Row:
+    """One album with its tracks in order."""
     album = db.q1("catalog.album", id=album_id)
     if album is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "album not found")

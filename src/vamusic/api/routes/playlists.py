@@ -31,16 +31,19 @@ def _owned(db: DbSession, playlist_id: UUID) -> int:
 
 @router.get("/me/playlists", response_model=list[schemas.PlaylistSummary])
 def my_playlists(db: DbSession, _user: CurrentUser) -> list[Row]:
+    """Playlists the signed-in listener owns, most recently changed first."""
     return db.q("playlists.mine")
 
 
 @router.get("/playlists", response_model=list[schemas.PlaylistSummary])
 def public_playlists(db: DbSession, limit: Annotated[int, Query(ge=1, le=100)] = 20) -> list[Row]:
+    """Public playlists, most followed first."""
     return db.q("playlists.public", limit=limit)
 
 
 @router.get("/playlists/{playlist_id}", response_model=schemas.Playlist)
 def get_playlist(playlist_id: UUID, db: DbSession) -> Row:
+    """One playlist with its tracks. Private playlists are visible only to their owner."""
     row = _load(db, playlist_id)
     row["tracks"] = db.q("playlists.tracks", playlist_id=row["playlist_id"])
     return row
@@ -48,6 +51,7 @@ def get_playlist(playlist_id: UUID, db: DbSession) -> Row:
 
 @router.post("/playlists", response_model=schemas.Playlist, status_code=201)
 def create_playlist(body: schemas.PlaylistIn, db: DbSession, _user: CurrentUser) -> Row:
+    """Create a playlist owned by the signed-in listener."""
     public_id = db.qv(
         "playlists.create",
         name=body.name,
@@ -61,6 +65,7 @@ def create_playlist(body: schemas.PlaylistIn, db: DbSession, _user: CurrentUser)
 def update_playlist(
     playlist_id: UUID, body: schemas.PlaylistPatch, db: DbSession, _user: CurrentUser
 ) -> Row:
+    """Rename a playlist, change its description or make it public or private. Owner only."""
     _owned(db, playlist_id)
     changes = body.model_dump(exclude_unset=True)
     db.q(
@@ -76,6 +81,7 @@ def update_playlist(
 
 @router.delete("/playlists/{playlist_id}", status_code=204)
 def delete_playlist(playlist_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Delete a playlist. Owner only."""
     _owned(db, playlist_id)
     db.q("playlists.delete", id=playlist_id)
     return Response(status_code=204)
@@ -85,6 +91,7 @@ def delete_playlist(playlist_id: UUID, db: DbSession, _user: CurrentUser) -> Res
 def add_track(
     playlist_id: UUID, body: schemas.PlaylistTrackIn, db: DbSession, _user: CurrentUser
 ) -> Row:
+    """Append a track to a playlist. Owner only."""
     pk = _owned(db, playlist_id)
     track = db.qv("library.track_pk", id=body.track_id)
     if track is None:
@@ -95,6 +102,7 @@ def add_track(
 
 @router.delete("/playlists/{playlist_id}/tracks/{track_id}", response_model=schemas.Playlist)
 def remove_track(playlist_id: UUID, track_id: UUID, db: DbSession, _user: CurrentUser) -> Row:
+    """Remove a track from a playlist and close the gap in positions. Owner only."""
     db.q("playlists.remove_track", playlist_id=_owned(db, playlist_id), track_id=track_id)
     return get_playlist(playlist_id, db)
 
@@ -103,17 +111,22 @@ def remove_track(playlist_id: UUID, track_id: UUID, db: DbSession, _user: Curren
 def reorder(
     playlist_id: UUID, body: schemas.PlaylistOrderIn, db: DbSession, _user: CurrentUser
 ) -> Row:
+    """Set the order of every track in one statement, using a deferrable unique constraint. Owner
+    only.
+    """
     db.q("playlists.reorder", playlist_id=_owned(db, playlist_id), track_ids=body.track_ids)
     return get_playlist(playlist_id, db)
 
 
 @router.put("/playlists/{playlist_id}/follow", status_code=204)
 def follow_playlist(playlist_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Follow someone else's public playlist. Idempotent."""
     db.q("playlists.follow", playlist_id=_load(db, playlist_id)["playlist_id"])
     return Response(status_code=204)
 
 
 @router.delete("/playlists/{playlist_id}/follow", status_code=204)
 def unfollow_playlist(playlist_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Stop following a playlist. Idempotent."""
     db.q("playlists.unfollow", playlist_id=_load(db, playlist_id)["playlist_id"])
     return Response(status_code=204)

@@ -25,34 +25,42 @@ def _pk(db: DbSession, query: str, public_id: UUID, what: str) -> Any:
 
 @router.get("/likes", response_model=list[schemas.Track])
 def likes(db: DbSession, _user: CurrentUser, limit: Limit = 100) -> list[Row]:
+    """Tracks the signed-in listener liked, newest first. Row-level security limits this to their
+    own rows.
+    """
     return db.q("library.likes", limit=limit)
 
 
 @router.put("/likes/{track_id}", status_code=204)
 def like(track_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Like a track. Idempotent."""
     db.q("library.like", track_id=_pk(db, "library.track_pk", track_id, "track"))
     return Response(status_code=204)
 
 
 @router.delete("/likes/{track_id}", status_code=204)
 def unlike(track_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Remove a like. Idempotent."""
     db.q("library.unlike", track_id=_pk(db, "library.track_pk", track_id, "track"))
     return Response(status_code=204)
 
 
 @router.get("/follows", response_model=list[schemas.ArtistRef])
 def follows(db: DbSession, _user: CurrentUser) -> list[Row]:
+    """Artists the signed-in listener follows."""
     return db.q("library.follows")
 
 
 @router.put("/follows/{artist_id}", status_code=204)
 def follow(artist_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Follow an artist. Idempotent."""
     db.q("library.follow", artist_id=_pk(db, "library.artist_pk", artist_id, "artist"))
     return Response(status_code=204)
 
 
 @router.delete("/follows/{artist_id}", status_code=204)
 def unfollow(artist_id: UUID, db: DbSession, _user: CurrentUser) -> Response:
+    """Unfollow an artist. Idempotent."""
     db.q("library.unfollow", artist_id=_pk(db, "library.artist_pk", artist_id, "artist"))
     return Response(status_code=204)
 
@@ -74,11 +82,15 @@ def record_play(body: schemas.PlayIn, db: DbSession, _user: CurrentUser) -> Row:
 
 @router.get("/history", response_model=list[schemas.Play])
 def history(db: DbSession, _user: CurrentUser, limit: Limit = 50) -> list[Row]:
+    """The signed-in listener's recent plays from the partitioned event store."""
     return db.q("library.history", limit=limit)
 
 
 @router.get("/recommendations", response_model=list[schemas.ScoredTrack])
 def recommendations(db: DbSession, _user: CurrentUser, limit: Limit = 20) -> list[Row]:
+    """Tracks near the listener's taste vector (the average of liked and recently played tracks),
+    skipping ones they already know. Falls back to trending for new listeners.
+    """
     return db.q("library.recommendations", limit=limit)
 
 
@@ -86,4 +98,7 @@ def recommendations(db: DbSession, _user: CurrentUser, limit: Limit = 20) -> lis
 def wrapped(
     db: DbSession, _user: CurrentUser, year: Annotated[int, Query(ge=2000, le=2100)] = 2026
 ) -> Row:
+    """A year in review computed by one SQL function: totals, top artists and tracks, streaks and
+    percentile.
+    """
     return dict(db.qv("library.wrapped", year=year))
