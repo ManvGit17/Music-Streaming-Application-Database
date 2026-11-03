@@ -1,11 +1,13 @@
-import { ChevronDown, Database, Trash2, X, Zap } from "lucide-react";
+import { ChevronDown, Copy, Database, Trash2, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Badge, IconButton } from "@/components/ui";
 import { api } from "@/data/api";
 import { type LensEntry, lens, useLens } from "@/data/store";
 import type { LensStatement } from "@/data/types";
 import { cn } from "@/lib/util";
+import { copyableSql } from "./copy";
 import { PlanTree } from "./PlanTree";
 import { SqlCode } from "./SqlCode";
 
@@ -15,6 +17,15 @@ const ROLE_NOTE: Record<string, string> = {
   vamusic_admin: "an admin: policies allow every row",
   vamusic_app: "the API's own role, which can only call the sign-in functions",
 };
+
+async function copy(s: LensStatement) {
+  try {
+    await navigator.clipboard.writeText(copyableSql(s));
+    toast.success("SQL copied, with its parameters as comments");
+  } catch {
+    toast.error("Couldn't reach the clipboard");
+  }
+}
 
 function Statement({ s }: { s: LensStatement }) {
   const [open, setOpen] = useState(false);
@@ -44,7 +55,17 @@ function Statement({ s }: { s: LensStatement }) {
       </button>
       {open ? (
         <div className="flex flex-col gap-3 border-t border-line px-3 pt-2 pb-3">
-          <SqlCode sql={s.sql} />
+          <div className="relative">
+            <SqlCode sql={s.sql} />
+            <IconButton
+              size="sm"
+              label={`Copy the SQL for ${s.name ?? "this statement"}`}
+              onClick={() => void copy(s)}
+              className="absolute top-1 right-1 bg-surface-strong"
+            >
+              <Copy className="size-3.5" aria-hidden />
+            </IconButton>
+          </div>
           {s.params.length ? (
             <p className="text-xs text-muted">
               <span className="eyebrow mr-2">Params</span>

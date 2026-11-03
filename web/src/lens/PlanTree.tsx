@@ -1,7 +1,9 @@
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { PlanNode } from "@/data/types";
 import { cn } from "@/lib/util";
+import { explainNode } from "./planNodes";
 
 function nodeDetail(node: PlanNode): string {
   const parts: string[] = [];
@@ -26,6 +28,26 @@ function tone(type: string): string {
   if (/Index|Bitmap/.test(type)) return "text-good";
   if (/Seq Scan/.test(type)) return "text-warn";
   return "text-ink";
+}
+
+/** Shows what a node type does on hover or keyboard focus, for the types we can explain. */
+function Explained({ type, children }: { type: string; children: React.ReactElement }) {
+  const text = explainNode(type);
+  if (!text) return children;
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          side="left"
+          sideOffset={8}
+          className="z-50 max-w-64 rounded-md bg-ink px-2.5 py-1.5 text-xs text-bg shadow-float"
+        >
+          <span className="font-medium">{type}:</span> {text}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
 }
 
 function Node({ node, depth, rootMs }: { node: PlanNode; depth: number; rootMs: number }) {
@@ -54,28 +76,32 @@ function Node({ node, depth, rootMs }: { node: PlanNode; depth: number; rootMs: 
           className="absolute inset-y-0.5 left-0 rounded-md bg-accent-soft"
           style={{ width: `${Math.max(share * 100, 0.5)}%` }}
         />
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          aria-expanded={kids.length || extra.length ? open : undefined}
-          className="relative flex w-full items-start gap-1.5 text-left"
-        >
-          <ChevronRight
-            className={cn(
-              "mt-0.5 size-3.5 shrink-0 text-faint transition-transform",
-              open && "rotate-90",
-              !(kids.length || extra.length) && "invisible",
-            )}
-            aria-hidden
-          />
-          <span className="min-w-0 flex-1">
-            <span className={cn("font-medium", tone(node["Node Type"]))}>{node["Node Type"]}</span>{" "}
-            <span className="text-muted">{nodeDetail(node)}</span>
-          </span>
-          <span className="shrink-0 text-faint tabular">
-            {node["Actual Rows"] ?? "–"} rows · {own.toFixed(2)} ms
-          </span>
-        </button>
+        <Explained type={node["Node Type"]}>
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={kids.length || extra.length ? open : undefined}
+            className="relative flex w-full items-start gap-1.5 text-left"
+          >
+            <ChevronRight
+              className={cn(
+                "mt-0.5 size-3.5 shrink-0 text-faint transition-transform",
+                open && "rotate-90",
+                !(kids.length || extra.length) && "invisible",
+              )}
+              aria-hidden
+            />
+            <span className="min-w-0 flex-1">
+              <span className={cn("font-medium", tone(node["Node Type"]))}>
+                {node["Node Type"]}
+              </span>{" "}
+              <span className="text-muted">{nodeDetail(node)}</span>
+            </span>
+            <span className="shrink-0 text-faint tabular">
+              {node["Actual Rows"] ?? "–"} rows · {own.toFixed(2)} ms
+            </span>
+          </button>
+        </Explained>
         {open && extra.length ? (
           <dl className="relative mt-1 ml-5 grid grid-cols-[auto_1fr] gap-x-2 text-faint">
             {extra.map(([k, v]) => (
