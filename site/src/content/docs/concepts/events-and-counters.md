@@ -17,12 +17,47 @@ how it stays fast as it grows.
 - Queries with a time range only touch the months they need. This is partition pruning, and a
   test checks the plan for it.
 - An old month can be detached or archived in one step instead of a huge `DELETE`.
-- Rows arrive roughly in time order, so a **BRIN** index on `played_at` (a few pages per
-  partition) does the job of a much larger B-tree.
+- Rows arrive roughly in time order, so a **BRIN** index on `played_at` stays tiny: one
+  min/max summary per block range. [BRIN or B-tree?](#brin-or-b-tree) has the measurements.
 
 The partition key must be part of the primary key, hence `PRIMARY KEY (event_id, played_at)`.
 `ensure_listening_partitions()` creates months ahead of time; `vamusic migrate` keeps a year
 ready.
+
+## BRIN or B-tree?
+
+[`scripts/bench_brin.py`](https://github.com/ManvGit17/Music-Streaming-Application-Database/blob/master/scripts/bench_brin.py)
+loads the million-play dataset and times a range query ending at the busiest day, with only the
+BRIN index, only a B-tree on `played_at`, or neither. The other indexes that end in `played_at`
+are hidden for the run, since PostgreSQL 18's skip scan can use them for a time range too.
+
+**Index size:** BRIN 1.2 MB across all partitions, B-tree 22.0 MB.
+
+| Range | Rows | BRIN, as loaded | BRIN, summarized | B-tree | No index |
+| :-- | --: | --: | --: | --: | --: |
+| 1 hour | 500 | 23.24 ms | **1.86 ms** | 2.55 ms | 16.70 ms |
+| 1 day | 10,429 | 39.78 ms | 4.12 ms | **2.77 ms** | 22.90 ms |
+| 7 days | 59,664 | 41.40 ms | 15.79 ms | **10.05 ms** | 25.64 ms |
+
+PostgreSQL 18 in Docker on Windows 11, an Intel laptop CPU (22 logical CPUs), median of 21 warm
+runs. October, the month queried, holds 208,139 of the million plays.
+
+What the numbers say:
+
+- **BRIN is useless until it's summarized.** The index existed before the bulk load, so the
+  loaded block ranges had no summaries, and a scan has to read every unsummarized range: slower
+  than no index at all. `VACUUM` or `brin_summarize_new_values()` fixes it. Migration 0012 adds
+  `summarize_listening_events()`, which the seed loader and the browser demo now run after
+  loading; for live traffic, autovacuum does it.
+- **Summarized, BRIN is a good trade.** It is 19 times smaller than the B-tree, beats it for an
+  hour of data, and stays within about 1.5 times its speed for a day or a week, where reading a
+  block range per match costs more than an exact index lookup.
+- **Partition pruning does a lot on its own.** With no index, each query still reads only
+  October's partition, in parallel.
+
+The B-tree would win more clearly at higher query rates or for very wide scans of hot data. For
+an append-only history where storage grows without end and queries look at recent windows, the
+summarized BRIN index is the better default.
 
 ## Counters without hot loops
 
